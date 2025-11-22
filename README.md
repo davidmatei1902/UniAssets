@@ -118,5 +118,5 @@ Open your browser at:
 
 - **Dependencies Not Found**
     - Run `./mvnw clean install` (Linux/macOS) or `mvnw.cmd clean install` (Windows).
-- *TBA* 
+- **TBA** 
     - Additional known issues will be documented here as they are discovered.
