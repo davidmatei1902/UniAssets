@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login - Evidenta Dotari</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .card { width: 400px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+<div class="card p-4">
+    <h3 class="text-center mb-4">Autentificare</h3>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <form action="/login" method="post">
+        <div class="mb-3">
+            <label>Utilizator</label>
+            <input type="text" name="username" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Parolă</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Intră în cont</button>
+    </form>
+</div>
+</body>
+</html>
