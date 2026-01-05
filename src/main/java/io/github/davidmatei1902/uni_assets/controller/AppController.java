@@ -45,7 +45,7 @@ public class AppController {
                                 @RequestParam(required = false) String filterParam) {
         if (session.getAttribute("user") == null) return "redirect:/";
 
-        model.addAttribute("tables", List.of("Facultati", "Departament", "Sali", "Dotari"));
+        model.addAttribute("tables", List.of("Facultati", "Departament", "Sali", "Dotari", "Caracteristici"));
         model.addAttribute("selectedTable", selectedTable);
 
         if (selectedTable != null) {

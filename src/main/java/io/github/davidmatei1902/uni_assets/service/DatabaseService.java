@@ -16,6 +16,10 @@ public class DatabaseService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    private static final List<String> ALLOWED_TABLES = List.of(
+            "Dotari", "Sali", "Facultati", "Departament", "Utilizatori", "SalaDotari", "Caracteristici"
+    );
+
     public boolean checkLogin(String username, String password) {
         String sql = "SELECT COUNT(*) FROM Utilizatori WHERE username = ? AND parola = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, username, password);
@@ -116,12 +120,12 @@ public class DatabaseService {
             case "departament": return "NumeDepartament";
             case "sali": return "NumeSala";
             case "dotari": return "NumeDotare";
+            case "caracteristici": return "NumeCaracteristica";
             default: return "Nume";
         }
     }
 
     private boolean isValidTable(String tableName) {
-        return Arrays.asList("Dotari", "Sali", "Facultati", "Departament", "Utilizatori", "SalaDotari").stream()
-                .anyMatch(t -> t.equalsIgnoreCase(tableName));
+        return ALLOWED_TABLES.stream().anyMatch(t -> t.equalsIgnoreCase(tableName));
     }
 }
