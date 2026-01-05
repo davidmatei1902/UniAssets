@@ -22,7 +22,6 @@ public class DatabaseService {
         return jdbcTemplate.queryForList("SELECT * FROM " + tableName);
     }
 
-    // Dotari per Facultate (JOIN + Parametru)
     public List<Map<String, Object>> getAssetsByFaculty(String facultyCode) {
         String sql = "SELECT f.NumeFacultate, d.NumeDepartament, s.NumeSala, dot.NumeDotare, sd.Cantitate " +
                 "FROM Facultati f " +
@@ -35,14 +34,12 @@ public class DatabaseService {
         return jdbcTemplate.queryForList(sql, facultyCode);
     }
 
-    // Sali peste Medie (SUBQUERY)
     public List<Map<String, Object>> getRoomsAboveAverageCapacity() {
         String sql = "SELECT NumeSala, Capacitate, TipSala FROM Sali " +
                 "WHERE Capacitate > (SELECT AVG(Capacitate) FROM Sali)";
         return jdbcTemplate.queryForList(sql);
     }
 
-    // Top Departamente (GROUP BY + HAVING)
     public List<Map<String, Object>> getTopEquippedDepartments() {
         String sql = "SELECT d.NumeDepartament, COUNT(sd.DotareID) as NrDotariDistinte, SUM(sd.Cantitate) as TotalObiecte " +
                 "FROM Departament d " +
@@ -53,7 +50,6 @@ public class DatabaseService {
         return jdbcTemplate.queryForList(sql);
     }
 
-    // Locatie Dotari (LIKE + Parametru)
     public List<Map<String, Object>> getAssetLocationByName(String assetName) {
         String sql = "SELECT dot.NumeDotare, s.NumeSala, s.Etaj, sd.Cantitate " +
                 "FROM Dotari dot " +
@@ -63,7 +59,6 @@ public class DatabaseService {
         return jdbcTemplate.queryForList(sql, "%" + assetName + "%");
     }
 
-    // Analiza Stare Inventar (GROUP BY coloane multiple)
     public List<Map<String, Object>> getInventoryStatusAnalysis() {
         String sql = "SELECT TipDotare, Stare, COUNT(*) as NumarUnitati " +
                 "FROM Dotari " +
@@ -90,16 +85,32 @@ public class DatabaseService {
         jdbcTemplate.update("INSERT INTO " + tableName + " (" + String.join(", ", columns) + ") VALUES (" + String.join(", ", values) + ")", params.toArray());
     }
 
-    public void deleteByBusinessName(String tableName, String identifierValue) {
-        String nameColumn;
-        switch (tableName.toLowerCase()) {
-            case "facultati": nameColumn = "NumeFacultate"; break;
-            case "departament": nameColumn = "NumeDepartament"; break;
-            case "sali": nameColumn = "NumeSala"; break;
-            case "dotari": nameColumn = "NumeDotare"; break;
-            default: nameColumn = "Nume";
+    public void updateRecord(String tableName, String targetName, Map<String, String> formData) {
+        String nameColumn = getNameColumn(tableName);
+        List<String> sets = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        for (Map.Entry<String, String> entry : formData.entrySet()) {
+            if (entry.getKey().toLowerCase().contains("id") || entry.getKey().equals("tableName") || entry.getKey().equals("targetName")) continue;
+            sets.add(entry.getKey() + " = ?");
+            params.add(entry.getValue());
         }
+        params.add(targetName);
+        jdbcTemplate.update("UPDATE " + tableName + " SET " + String.join(", ", sets) + " WHERE " + nameColumn + " = ?", params.toArray());
+    }
+
+    public void deleteByBusinessName(String tableName, String identifierValue) {
+        String nameColumn = getNameColumn(tableName);
         jdbcTemplate.update("DELETE FROM " + tableName + " WHERE " + nameColumn + " = ?", identifierValue);
+    }
+
+    private String getNameColumn(String tableName) {
+        switch (tableName.toLowerCase()) {
+            case "facultati": return "NumeFacultate";
+            case "departament": return "NumeDepartament";
+            case "sali": return "NumeSala";
+            case "dotari": return "NumeDotare";
+            default: return "Nume";
+        }
     }
 
     private boolean isValidTable(String tableName) {

@@ -75,7 +75,7 @@ public class AppController {
                     tableDescription = "Lista completa a inregistrarilor din tabela.";
                     List<String> columns = databaseService.getTableColumns(selectedTable);
                     columns.removeIf(c -> c.toLowerCase().contains("id"));
-                    model.addAttribute("insertColumns", columns);
+                    model.addAttribute("editColumns", columns);
                     break;
             }
             model.addAttribute("tableDescription", tableDescription);
@@ -88,6 +88,12 @@ public class AppController {
     @PostMapping("/insert")
     public String insertData(@RequestParam String tableName, @RequestParam Map<String, String> allParams) {
         databaseService.insertRecord(tableName, allParams);
+        return "redirect:/dashboard?selectedTable=" + tableName;
+    }
+
+    @PostMapping("/update")
+    public String updateData(@RequestParam String tableName, @RequestParam String targetName, @RequestParam Map<String, String> allParams) {
+        databaseService.updateRecord(tableName, targetName, allParams);
         return "redirect:/dashboard?selectedTable=" + tableName;
     }
 
