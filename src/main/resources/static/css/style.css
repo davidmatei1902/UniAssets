@@ -1,0 +1,52 @@
+:root {
+    --primary-color: #0d6efd;
+    --bg-light: #f4f7f6;
+    --dark-nav: #212529;
+}
+
+body {
+    background-color: var(--bg-light);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.navbar {
+    background: var(--dark-nav) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 0.8rem 1.5rem;
+}
+
+.navbar .btn-logout {
+    background-color: transparent !important;
+    color: #ffffff !important;
+    border: 2px solid #ff4d4d !important;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.navbar .btn-logout:hover {
+    background-color: #ff4d4d !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 10px rgba(255, 77, 77, 0.4);
+}
+
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    background: #ffffff;
+}
+
+.table-container {
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px;
+}
+
+.badge-count {
+    background: #e9ecef;
+    color: #495057;
+    font-weight: 600;
+    border-radius: 20px;
+    padding: 5px 15px;
+}

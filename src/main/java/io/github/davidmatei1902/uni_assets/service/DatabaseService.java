@@ -11,98 +11,99 @@ public class DatabaseService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    // Test database connectivity
-    public boolean testConnection() {
-        try {
-            jdbcTemplate.execute("SELECT 1");
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    // Verify user credentials against the database
     public boolean checkLogin(String username, String password) {
         String sql = "SELECT COUNT(*) FROM Utilizatori WHERE username = ? AND parola = ?";
-        // Spring handles parameter replacement to prevent SQL Injection
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, username, password);
         return count != null && count > 0;
     }
 
-    // Fetch all rows from a specific table
-    public List<Map<String, Object>> getTable(String tableName) {
-        // Validate table name to prevent SQL Injection
-        if (!isValidTable(tableName)) throw new IllegalArgumentException("Invalid table!");
+    public List<Map<String, Object>> getTableData(String tableName) {
+        if (!isValidTable(tableName)) throw new IllegalArgumentException("Acces interzis!");
+        return jdbcTemplate.queryForList("SELECT * FROM " + tableName);
+    }
 
-        String sql = "SELECT * FROM " + tableName;
+    // Dotari per Facultate (JOIN + Parametru)
+    public List<Map<String, Object>> getAssetsByFaculty(String facultyCode) {
+        String sql = "SELECT f.NumeFacultate, d.NumeDepartament, s.NumeSala, dot.NumeDotare, sd.Cantitate " +
+                "FROM Facultati f " +
+                "JOIN Departament d ON f.FacultateID = d.FacultateID " +
+                "JOIN SalaDepartament sdep ON d.DepartamentID = sdep.DepartamentID " +
+                "JOIN Sali s ON sdep.SalaID = s.SalaID " +
+                "JOIN SalaDotari sd ON s.SalaID = sd.SalaID " +
+                "JOIN Dotari dot ON sd.DotareID = dot.DotareID " +
+                "WHERE f.CodFacultate = ?";
+        return jdbcTemplate.queryForList(sql, facultyCode);
+    }
+
+    // Sali peste Medie (SUBQUERY)
+    public List<Map<String, Object>> getRoomsAboveAverageCapacity() {
+        String sql = "SELECT NumeSala, Capacitate, TipSala FROM Sali " +
+                "WHERE Capacitate > (SELECT AVG(Capacitate) FROM Sali)";
         return jdbcTemplate.queryForList(sql);
     }
 
-    // Retrieve column names for a specific table
-    public List<String> getTableColumns(String tableName) {
-        if (!isValidTable(tableName)) throw new IllegalArgumentException("Invalid table!");
-
-        // Query metadata to get column names
-        String sql = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?";
-        return jdbcTemplate.queryForList(sql, String.class, tableName);
+    // Top Departamente (GROUP BY + HAVING)
+    public List<Map<String, Object>> getTopEquippedDepartments() {
+        String sql = "SELECT d.NumeDepartament, COUNT(sd.DotareID) as NrDotariDistinte, SUM(sd.Cantitate) as TotalObiecte " +
+                "FROM Departament d " +
+                "JOIN SalaDepartament sdep ON d.DepartamentID = sdep.DepartamentID " +
+                "JOIN SalaDotari sd ON sdep.SalaID = sd.SalaID " +
+                "GROUP BY d.NumeDepartament " +
+                "HAVING SUM(sd.Cantitate) > 5";
+        return jdbcTemplate.queryForList(sql);
     }
 
-    // Insert a new row dynamically
-    public void insertRow(String tableName, Map<String, String> formData) {
-        if (!isValidTable(tableName)) throw new IllegalArgumentException("Invalid table!");
+    // Locatie Dotari (LIKE + Parametru)
+    public List<Map<String, Object>> getAssetLocationByName(String assetName) {
+        String sql = "SELECT dot.NumeDotare, s.NumeSala, s.Etaj, sd.Cantitate " +
+                "FROM Dotari dot " +
+                "JOIN SalaDotari sd ON dot.DotareID = sd.DotareID " +
+                "JOIN Sali s ON sd.SalaID = s.SalaID " +
+                "WHERE dot.NumeDotare LIKE ?";
+        return jdbcTemplate.queryForList(sql, "%" + assetName + "%");
+    }
 
+    // Analiza Stare Inventar (GROUP BY coloane multiple)
+    public List<Map<String, Object>> getInventoryStatusAnalysis() {
+        String sql = "SELECT TipDotare, Stare, COUNT(*) as NumarUnitati " +
+                "FROM Dotari " +
+                "GROUP BY TipDotare, Stare " +
+                "ORDER BY TipDotare";
+        return jdbcTemplate.queryForList(sql);
+    }
+
+    public List<String> getTableColumns(String tableName) {
+        if (!isValidTable(tableName)) return new ArrayList<>();
+        return jdbcTemplate.queryForList("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?", String.class, tableName);
+    }
+
+    public void insertRecord(String tableName, Map<String, String> formData) {
         List<String> columns = new ArrayList<>();
         List<String> values = new ArrayList<>();
         List<Object> params = new ArrayList<>();
-
         for (Map.Entry<String, String> entry : formData.entrySet()) {
-            String colName = entry.getKey();
-            String val = entry.getValue();
-
-            // Skip ID columns or empty values
-            if (colName.equalsIgnoreCase("id") || colName.toLowerCase().endsWith("id")) continue;
-
-            columns.add(colName);
-            values.add("?"); // Placeholder for PreparedStatement
-            params.add(val);
+            if (entry.getKey().toLowerCase().contains("id") || entry.getKey().equals("tableName")) continue;
+            columns.add(entry.getKey());
+            values.add("?");
+            params.add(entry.getValue());
         }
-
-        String sql = "INSERT INTO " + tableName + " (" + String.join(", ", columns) + ") " +
-                "VALUES (" + String.join(", ", values) + ")";
-
-        jdbcTemplate.update(sql, params.toArray());
+        jdbcTemplate.update("INSERT INTO " + tableName + " (" + String.join(", ", columns) + ") VALUES (" + String.join(", ", values) + ")", params.toArray());
     }
 
-    // Delete a row by ID
-    public int deleteRow(String tableName, int id) {
-        // Validate table name
-        List<String> allowedTables = Arrays.asList("Dotari", "Sali", "Facultati", "Departament", "Caracteristici", "SalaDotari");
-        if (allowedTables.stream().noneMatch(t -> t.equalsIgnoreCase(tableName))) {
-            throw new IllegalArgumentException("Invalid table!");
+    public void deleteByBusinessName(String tableName, String identifierValue) {
+        String nameColumn;
+        switch (tableName.toLowerCase()) {
+            case "facultati": nameColumn = "NumeFacultate"; break;
+            case "departament": nameColumn = "NumeDepartament"; break;
+            case "sali": nameColumn = "NumeSala"; break;
+            case "dotari": nameColumn = "NumeDotare"; break;
+            default: nameColumn = "Nume";
         }
-
-        // Determine the ID column name based on table conventions
-        String idColumn = tableName + "ID";
-        if (tableName.equalsIgnoreCase("Dotari")) idColumn = "DotareID";
-        else if (tableName.equalsIgnoreCase("Sali")) idColumn = "SalaID";
-        else if (tableName.equalsIgnoreCase("Facultati")) idColumn = "FacultateID";
-        // Add other exceptions here if necessary
-
-        // Execute deletion
-        String sql = "DELETE FROM " + tableName + " WHERE " + idColumn + " = ?";
-        int rowsAffected = jdbcTemplate.update(sql, id);
-
-        // Check if the operation was successful
-        if (rowsAffected == 0) {
-            throw new RuntimeException("No record found with ID " + id + " in table " + tableName + "!");
-        }
-
-        return rowsAffected;
+        jdbcTemplate.update("DELETE FROM " + tableName + " WHERE " + nameColumn + " = ?", identifierValue);
     }
 
-    // Whitelist allowed tables for security reasons
     private boolean isValidTable(String tableName) {
-        List<String> allowed = Arrays.asList("Dotari", "Sali", "Facultati", "Departament", "Caracteristici", "Utilizatori");
-        return allowed.stream().anyMatch(t -> t.equalsIgnoreCase(tableName));
+        return Arrays.asList("Dotari", "Sali", "Facultati", "Departament", "Caracteristici", "SalaDotari").stream()
+                .anyMatch(t -> t.equalsIgnoreCase(tableName));
     }
 }

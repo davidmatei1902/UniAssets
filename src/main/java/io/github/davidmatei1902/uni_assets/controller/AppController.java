@@ -6,31 +6,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Controller
 public class AppController {
 
     @Autowired
-    private DatabaseService dbService;
+    private DatabaseService databaseService;
 
-    // --- LOGIN SECTION ---
     @GetMapping("/")
-    public String showLogin() {
-        return "login";
-    }
+    public String showLogin() { return "login"; }
 
     @PostMapping("/login")
     public String processLogin(@RequestParam String username, @RequestParam String password, HttpSession session, Model model) {
-        if (dbService.checkLogin(username, password)) {
+        if (databaseService.checkLogin(username, password)) {
             session.setAttribute("user", username);
             return "redirect:/dashboard";
-        } else {
-            model.addAttribute("error", "Incorrect username or password!");
-            return "login";
         }
+        model.addAttribute("error", "Eroare autentificare!");
+        return "login";
     }
 
     @GetMapping("/logout")
@@ -39,55 +33,67 @@ public class AppController {
         return "redirect:/";
     }
 
-    // --- DASHBOARD SECTION ---
     @GetMapping("/dashboard")
-    public String showDashboard(HttpSession session, Model model, @RequestParam(required = false) String selectedTable) {
+    public String showDashboard(HttpSession session, Model model,
+                                @RequestParam(required = false) String selectedTable,
+                                @RequestParam(required = false) String filterParam) {
         if (session.getAttribute("user") == null) return "redirect:/";
 
-        // List of tables for the Dropdown menu
-        List<String> tables = List.of("Dotari", "Sali", "Facultati", "Departament");
-        model.addAttribute("tables", tables);
+        model.addAttribute("tables", List.of("Facultati", "Departament", "Sali", "Dotari"));
         model.addAttribute("selectedTable", selectedTable);
 
-        // Load data and schema if a table is selected
-        if (selectedTable != null && !selectedTable.isEmpty()) {
-            try {
-                // Fetch data for the View tab
-                List<Map<String, Object>> rows = dbService.getTable(selectedTable);
-                model.addAttribute("tableData", rows);
+        if (selectedTable != null) {
+            List<Map<String, Object>> resultData;
+            String filterValue = (filterParam == null || filterParam.isEmpty()) ? "" : filterParam;
+            String tableDescription = "";
 
-                // Extract column names for the table header
-                if (!rows.isEmpty()) {
-                    model.addAttribute("columns", rows.get(0).keySet());
-                }
-
-                // Fetch schema for the Insert tab
-                List<String> schemaColumns = dbService.getTableColumns(selectedTable);
-
-                // Filter out ID columns so they don't appear in the insert form
-                schemaColumns.removeIf(col -> col.toLowerCase().endsWith("id"));
-                model.addAttribute("insertColumns", schemaColumns);
-
-            } catch (Exception e) {
-                model.addAttribute("error", "DB Error: " + e.getMessage());
+            switch (selectedTable) {
+                case "COMPLEX_REPORT":
+                    resultData = databaseService.getAssetsByFaculty(filterValue.isEmpty() ? "AC" : filterValue);
+                    tableDescription = "Afiseaza toate dotarile si locatia lor pentru o anumita facultate.";
+                    model.addAttribute("currentParam", filterValue.isEmpty() ? "AC" : filterValue);
+                    break;
+                case "ROOMS_AVG":
+                    resultData = databaseService.getRoomsAboveAverageCapacity();
+                    tableDescription = "Identifica salile care au o capacitate mai mare decat media universitatii.";
+                    break;
+                case "DEPT_STATS":
+                    resultData = databaseService.getTopEquippedDepartments();
+                    tableDescription = "Afiseaza departamentele care detin cele mai multe obiecte de inventar.";
+                    break;
+                case "ASSET_LOC":
+                    resultData = databaseService.getAssetLocationByName(filterValue.isEmpty() ? "PC" : filterValue);
+                    tableDescription = "Cauta sala si etajul unde se afla un anumit tip de obiect.";
+                    model.addAttribute("currentParam", filterValue.isEmpty() ? "PC" : filterValue);
+                    break;
+                case "STATUS_ANALYSIS":
+                    resultData = databaseService.getInventoryStatusAnalysis();
+                    tableDescription = "Prezinta starea de functionare a inventarului pe categorii de obiecte.";
+                    break;
+                default:
+                    resultData = databaseService.getTableData(selectedTable);
+                    tableDescription = "Lista completa a inregistrarilor din tabela.";
+                    List<String> columns = databaseService.getTableColumns(selectedTable);
+                    columns.removeIf(c -> c.toLowerCase().contains("id"));
+                    model.addAttribute("insertColumns", columns);
+                    break;
             }
+            model.addAttribute("tableDescription", tableDescription);
+            model.addAttribute("tableData", resultData);
+            if (!resultData.isEmpty()) model.addAttribute("columns", resultData.get(0).keySet());
         }
         return "dashboard";
     }
 
-    // --- DATA ACTIONS ---
     @PostMapping("/insert")
     public String insertData(@RequestParam String tableName, @RequestParam Map<String, String> allParams) {
-        // Remove technical parameters that are not part of the database columns
-        allParams.remove("tableName");
-
-        dbService.insertRow(tableName, allParams);
+        databaseService.insertRecord(tableName, allParams);
         return "redirect:/dashboard?selectedTable=" + tableName;
     }
 
     @PostMapping("/delete")
-    public String deleteData(@RequestParam String tableName, @RequestParam int id) {
-        dbService.deleteRow(tableName, id);
+    public String deleteData(@RequestParam String tableName, @RequestParam String identifier) {
+        databaseService.deleteByBusinessName(tableName, identifier);
         return "redirect:/dashboard?selectedTable=" + tableName;
     }
 }
