@@ -71,6 +71,11 @@ public class DatabaseService {
         return jdbcTemplate.queryForList(sql, facultyCode);
     }
 
+    public Double getAverageCapacity() {
+        String sql = "SELECT AVG(CAST(Capacitate AS FLOAT)) FROM Sali";
+        return jdbcTemplate.queryForObject(sql, Double.class);
+    }
+
     public List<Map<String, Object>> getRoomsAboveAverageCapacity() {
         String sql = "SELECT NumeSala, Capacitate, TipSala FROM Sali " +
                 "WHERE Capacitate > (SELECT AVG(Capacitate) FROM Sali)";

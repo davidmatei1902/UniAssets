@@ -20,14 +20,19 @@ body {
     color: #ffffff !important;
     border: 2px solid #ff4d4d !important;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    padding: 8px 24px;
+    border-radius: 50px;
     transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .navbar .btn-logout:hover {
     background-color: #ff4d4d !important;
     color: #ffffff !important;
-    box-shadow: 0 0 10px rgba(255, 77, 77, 0.4);
+    box-shadow: 0 0 15px rgba(255, 77, 77, 0.5);
+    transform: translateY(-1px); /* Efect discret de ridicare la hover */
 }
 
 .card {

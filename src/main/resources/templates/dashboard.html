@@ -7,20 +7,20 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<nav class="navbar navbar-dark bg-dark mb-4">
+<nav class="navbar navbar-dark bg-dark mb-4 shadow-sm">
     <div class="container-fluid px-4">
-        <a class="navbar-brand fw-bold" href="#">University Assets Manager</a>
+        <a class="navbar-brand fw-bold" href="/dashboard">University Assets Manager</a>
         <div class="d-flex align-items-center">
-            <span class="text-white-50 me-3 small">Current User: <span class="text-white fw-bold" th:text="${session.user}"></span></span>
-            <div class="border-start border-secondary h-100 mx-2" style="width: 1px; height: 20px; opacity: 0.3;"></div>
-            <a href="/logout" class="btn btn-logout btn-sm rounded-pill px-4 ms-2">Logout</a>
+            <span class="text-white-50 me-3 small">Utilizator: <span class="text-white fw-bold" th:text="${session.user}"></span></span>
+            <a href="/logout" class="btn-logout">Logout</a>
         </div>
     </div>
 </nav>
+
 <div class="container-fluid px-4">
     <div class="row">
         <div class="col-md-3">
-            <div class="card p-4 mb-4">
+            <div class="card p-4 mb-4 shadow-sm border-0 bg-white">
                 <label class="form-label fw-bold small text-uppercase text-muted mb-3">Analiza si Date</label>
                 <form action="/dashboard" method="get">
                     <input type="hidden" name="filterParam" th:value="${currentParam}">
@@ -44,37 +44,45 @@
                 </form>
             </div>
         </div>
+
         <div class="col-md-9">
-            <div th:if="${selectedTable}" class="table-container shadow-sm border-0">
+            <div th:if="${selectedTable}" class="table-container shadow-sm border-0 bg-white p-4" style="border-radius: 12px;">
                 <div class="d-flex justify-content-between align-items-center mb-1">
                     <h4 class="fw-bold m-0 text-dark" th:text="${selectedTable.contains('_') || selectedTable.contains('AVG') ? 'Raport Complex' : 'Gestionare ' + selectedTable}"></h4>
-                    <span class="badge-count" th:text="${tableData.size() + ' inregistrari'}"></span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span th:if="${avgValue}" class="badge bg-info text-dark fw-bold rounded-pill px-3 shadow-sm" style="font-size: 0.85rem;">Media Univ: <span th:text="${avgValue}"></span></span>
+                        <span th:if="${thresholdValue}" class="badge bg-warning text-dark fw-bold rounded-pill px-3 shadow-sm" style="font-size: 0.85rem;">Prag Dotari: > <span th:text="${thresholdValue}"></span> unitati</span>
+                        <span class="badge bg-light text-dark border rounded-pill px-3 shadow-sm" style="font-size: 0.85rem;" th:text="${tableData.size() + ' inregistrari'}"></span>
+                    </div>
                 </div>
-                <div class="mb-4"><p class="text-secondary small m-0 fst-italic"><span th:text="${tableDescription}"></span></p></div>
-                <div th:if="${selectedTable == 'COMPLEX_REPORT' || selectedTable == 'ASSET_LOC'}" class="card bg-primary text-white p-3 mb-4 filter-section border-0">
+                <div class="mb-4"><p class="text-secondary small m-0 fst-italic" th:text="${tableDescription}"></p></div>
+
+                <div th:if="${selectedTable == 'COMPLEX_REPORT' || selectedTable == 'ASSET_LOC'}" class="card bg-primary text-white p-3 mb-4 border-0 shadow-sm">
                     <form action="/dashboard" method="get" class="d-flex align-items-center gap-3">
-                        <input type="hidden" name="selectedTable" th:value="${selectedTable}">
-                        <input type="hidden" name="showSecret" th:value="${showSecret}">
-                        <span class="small fw-bold" th:text="${selectedTable == 'COMPLEX_REPORT' ? 'Cod Facultate (ex: AC):' : 'Nume Dotare (ex: PC):'}"></span>
+                        <input type="hidden" name="selectedTable" th:value="${selectedTable}"><input type="hidden" name="showSecret" th:value="${showSecret}">
+                        <span class="small fw-bold" th:text="${selectedTable == 'COMPLEX_REPORT' ? 'Cod Facultate:' : 'Nume Dotare:'}"></span>
                         <input type="text" name="filterParam" class="form-control form-control-sm w-25 border-0 shadow-sm" th:value="${currentParam}">
-                        <button type="submit" class="btn btn-sm btn-light fw-bold text-primary px-4">Aplica Filtru</button>
+                        <button type="submit" class="btn btn-sm btn-light fw-bold text-primary px-4">Aplica</button>
                     </form>
                 </div>
-                <ul class="nav nav-tabs mb-4" role="tablist">
-                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#view" type="button">Vizualizare</button></li>
-                    <li class="nav-item" th:if="${editColumns}"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#insert" type="button">Adaugare</button></li>
-                    <li class="nav-item" th:if="${editColumns}"><button class="nav-link text-warning" data-bs-toggle="tab" data-bs-target="#update" type="button">Update</button></li>
-                    <li class="nav-item" th:if="${editColumns}"><button class="nav-link text-danger" data-bs-toggle="tab" data-bs-target="#delete" type="button">Stergere</button></li>
+
+                <ul class="nav nav-tabs mb-4 border-0" role="tablist">
+                    <li class="nav-item"><button class="nav-link active fw-bold px-4" data-bs-toggle="tab" data-bs-target="#view" type="button">Vizualizare</button></li>
+                    <li class="nav-item" th:if="${editColumns}"><button class="nav-link fw-bold text-success px-4" data-bs-toggle="tab" data-bs-target="#insert" type="button">Adaugare</button></li>
+                    <li class="nav-item" th:if="${editColumns}"><button class="nav-link fw-bold text-warning px-4" data-bs-toggle="tab" data-bs-target="#update" type="button">Update</button></li>
+                    <li class="nav-item" th:if="${editColumns}"><button class="nav-link fw-bold text-danger px-4" data-bs-toggle="tab" data-bs-target="#delete" type="button">Stergere</button></li>
                 </ul>
-                <div class="tab-content">
+
+                <div class="tab-content pt-2">
                     <div class="tab-pane fade show active" id="view">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
-                                <thead><tr><th th:each="col : ${columns}" th:if="${!col.toLowerCase().contains('id')}" th:text="${col}"></th></tr></thead>
+                                <thead class="table-light"><tr><th th:each="col : ${columns}" th:if="${!col.toLowerCase().contains('id')}" th:text="${col}"></th></tr></thead>
                                 <tbody><tr th:each="row : ${tableData}"><td th:each="entry : ${row}" th:if="${!entry.key.toLowerCase().contains('id')}" th:text="${entry.value}"></td></tr></tbody>
                             </table>
                         </div>
                     </div>
+
                     <div class="tab-pane fade" id="insert" th:if="${editColumns}">
                         <form action="/insert" method="post" class="p-2">
                             <input type="hidden" name="tableName" th:value="${selectedTable}">
@@ -82,24 +90,53 @@
                             <div class="text-end mt-5"><button type="submit" class="btn btn-primary px-5 py-2 rounded-pill shadow-sm">Confirma Adaugarea</button></div>
                         </form>
                     </div>
+
                     <div class="tab-pane fade" id="update" th:if="${editColumns}">
                         <form action="/update" method="post" class="p-2">
                             <input type="hidden" name="tableName" th:value="${selectedTable}">
-                            <div class="mb-4"><label class="form-label fw-bold text-warning">Numele inregistrarii de modificat:</label><input type="text" name="targetName" class="form-control border-warning shadow-sm" placeholder="Ex: Numele actual" required><p class="small text-muted mt-1">Regula 2: Identificare dupa nume, nu dupa ID.</p></div>
+                            <div class="mb-4"><label class="form-label fw-bold text-warning">Inregistrare de modificat (Identificator):</label><input type="text" name="targetName" class="form-control border-warning shadow-sm" required></div>
                             <hr><div class="row g-4"><div class="col-md-6" th:each="col : ${editColumns}"><label class="form-label small fw-bold text-muted" th:text="'Noua valoare pentru ' + ${col}"></label><input type="text" th:name="${col}" class="form-control bg-light border-0 py-2"></div></div>
                             <div class="text-end mt-5"><button type="submit" class="btn btn-warning text-white px-5 py-2 rounded-pill shadow-sm">Salveaza Modificarile</button></div>
                         </form>
                     </div>
+
                     <div class="tab-pane fade text-center py-5" id="delete" th:if="${editColumns}">
-                        <form action="/delete" method="post" onsubmit="return confirm('Stergerea este definitiva. Confirmati?')">
+                        <form action="/delete" method="post" onsubmit="return confirm('Sunteti sigur ca doriti sa stergeti inregistrarea?')">
                             <input type="hidden" name="tableName" th:value="${selectedTable}">
-                            <div class="mb-4"><h5 class="fw-bold">Stergere dupa Nume</h5><p class="text-muted small">Introduceti numele exact al inregistrarii pentru eliminare.</p></div>
-                            <input type="text" name="identifier" class="form-control w-50 mx-auto mb-3 text-center py-2 border-0 bg-light" placeholder="Ex: EC101" required><button type="submit" class="btn btn-danger px-5 py-2 rounded-pill">Elimina</button>
+                            <div class="mb-4"><h5 class="fw-bold text-danger">Eliminare Inregistrare</h5><p class="text-muted small">Introduceti identificatorul exact pentru stergere.</p></div>
+                            <input type="text" name="identifier" class="form-control w-50 mx-auto mb-3 text-center py-2 border-0 bg-light shadow-sm" placeholder="Ex: Numele de sters" required><button type="submit" class="btn btn-danger px-5 py-2 rounded-pill">Elimina Definitiv</button>
                         </form>
                     </div>
                 </div>
             </div>
-            <div th:unless="${selectedTable}" class="text-center py-5"><div class="card p-5 bg-white border-0 shadow-sm"><h2 class="fw-bold text-dark mb-3">Bun venit pe pagina de dezvoltare</h2><p class="text-muted mx-auto" style="max-width: 600px;">Acesta este sistemul de gestiune pentru University Assets Manager. Va rugam sa selectati un raport complex sau o tabela din meniul lateral pentru a vizualiza, adauga, modifica sau sterge inregistrari.</p></div></div>
+
+            <div th:unless="${selectedTable}" class="text-center py-5">
+                <div class="card p-5 bg-white border-0 shadow-sm mx-auto" style="border-radius: 15px; max-width: 800px;">
+                    <div class="mb-4">
+                        <h2 class="fw-bold text-dark">University Assets Manager</h2>
+                    </div>
+
+                    <div class="py-3 px-4 mb-4 bg-light border-start border-primary border-4 rounded-end mx-auto" style="max-width: 600px;">
+                        <p class="text-muted m-0 fst-italic">
+                            Sistem centralizat pentru monitorizarea resurselor si a infrastructurii universitare.
+                        </p>
+                    </div>
+
+                    <div class="py-4">
+                        <p class="lead text-secondary">
+                            Pentru a incepe consultarea datelor sau gestionarea inventarului,
+                            va rugam sa selectati o optiune din meniul lateral <strong>Analiza si Date</strong>.
+                        </p>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-top">
+                        <p class="text-muted small mb-0">
+                            Accesul la structurile de date intermediare se poate face prin activarea
+                            optiunii <strong>Afiseaza tabele intermediare</strong> din panoul lateral.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

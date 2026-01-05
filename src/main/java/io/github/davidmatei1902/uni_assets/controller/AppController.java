@@ -72,11 +72,18 @@ public class AppController {
                     break;
                 case "ROOMS_AVG":
                     resultData = databaseService.getRoomsAboveAverageCapacity();
-                    tableDescription = "Identifica salile care au o capacitate mai mare decat media universitatii.";
+                    Double avg = databaseService.getAverageCapacity();
+
+                    String formattedAvg = (avg != null) ? String.format("%.2f", avg) : "0.00";
+                    tableDescription = "Identifica salile care au o capacitate mai mare decat media universitatii";
+
+                    model.addAttribute("avgValue", formattedAvg);
                     break;
                 case "DEPT_STATS":
                     resultData = databaseService.getTopEquippedDepartments();
                     tableDescription = "Afiseaza departamentele care detin cele mai multe obiecte de inventar.";
+
+                    model.addAttribute("thresholdValue", 5);
                     break;
                 case "ASSET_LOC":
                     resultData = databaseService.getAssetLocationByName(filterValue.isEmpty() ? "PC" : filterValue);
