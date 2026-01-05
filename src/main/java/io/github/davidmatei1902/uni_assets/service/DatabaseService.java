@@ -1,9 +1,14 @@
+/** Clasa Service pentru operatiile de manipulare a datelor si logica de procesare
+ * @author David Matei
+ * @version 5 Ianuarie 2026
+ */
 package io.github.davidmatei1902.uni_assets.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class DatabaseService {
@@ -17,20 +22,29 @@ public class DatabaseService {
         return count != null && count > 0;
     }
 
-    public List<Map<String, Object>> getTableData(String tableName) {
+    public List<Map<String, Object>> getSortedTableData(String tableName) {
         if (!isValidTable(tableName)) throw new IllegalArgumentException("Acces interzis!");
-        return jdbcTemplate.queryForList("SELECT * FROM " + tableName);
+        List<Map<String, Object>> data = jdbcTemplate.queryForList("SELECT * FROM " + tableName);
+
+        String nameCol = getNameColumn(tableName);
+
+        return data.stream()
+                .sorted((m1, m2) -> {
+                    String v1 = m1.get(nameCol) != null ? m1.get(nameCol).toString() : "";
+                    String v2 = m2.get(nameCol) != null ? m2.get(nameCol).toString() : "";
+                    return v1.compareToIgnoreCase(v2);
+                })
+                .collect(Collectors.toList());
     }
 
     public List<Map<String, Object>> getAssetsByFaculty(String facultyCode) {
         String sql = "SELECT f.NumeFacultate, d.NumeDepartament, s.NumeSala, dot.NumeDotare, sd.Cantitate " +
-                "FROM Facultati f " +
-                "JOIN Departament d ON f.FacultateID = d.FacultateID " +
+                "FROM Facultati f JOIN Departament d ON f.FacultateID = d.FacultateID " +
                 "JOIN SalaDepartament sdep ON d.DepartamentID = sdep.DepartamentID " +
                 "JOIN Sali s ON sdep.SalaID = s.SalaID " +
                 "JOIN SalaDotari sd ON s.SalaID = sd.SalaID " +
                 "JOIN Dotari dot ON sd.DotareID = dot.DotareID " +
-                "WHERE f.CodFacultate = ?";
+                "WHERE f.FacultateID = (SELECT FacultateID FROM Facultati WHERE CodFacultate = ?)";
         return jdbcTemplate.queryForList(sql, facultyCode);
     }
 
@@ -41,29 +55,22 @@ public class DatabaseService {
     }
 
     public List<Map<String, Object>> getTopEquippedDepartments() {
-        String sql = "SELECT d.NumeDepartament, COUNT(sd.DotareID) as NrDotariDistinte, SUM(sd.Cantitate) as TotalObiecte " +
-                "FROM Departament d " +
-                "JOIN SalaDepartament sdep ON d.DepartamentID = sdep.DepartamentID " +
-                "JOIN SalaDotari sd ON sdep.SalaID = sd.SalaID " +
-                "GROUP BY d.NumeDepartament " +
-                "HAVING SUM(sd.Cantitate) > 5";
+        String sql = "SELECT NumeDepartament FROM Departament " +
+                "WHERE DepartamentID IN (SELECT DepartamentID FROM SalaDepartament WHERE SalaID IN " +
+                "(SELECT SalaID FROM SalaDotari GROUP BY SalaID HAVING SUM(Cantitate) > 5))";
         return jdbcTemplate.queryForList(sql);
     }
 
     public List<Map<String, Object>> getAssetLocationByName(String assetName) {
-        String sql = "SELECT dot.NumeDotare, s.NumeSala, s.Etaj, sd.Cantitate " +
-                "FROM Dotari dot " +
-                "JOIN SalaDotari sd ON dot.DotareID = sd.DotareID " +
-                "JOIN Sali s ON sd.SalaID = s.SalaID " +
-                "WHERE dot.NumeDotare LIKE ?";
+        String sql = "SELECT s.NumeSala, s.Etaj, sd.Cantitate " +
+                "FROM Sali s JOIN SalaDotari sd ON s.SalaID = sd.SalaID " +
+                "WHERE sd.DotareID IN (SELECT DotareID FROM Dotari WHERE NumeDotare LIKE ?)";
         return jdbcTemplate.queryForList(sql, "%" + assetName + "%");
     }
 
     public List<Map<String, Object>> getInventoryStatusAnalysis() {
         String sql = "SELECT TipDotare, Stare, COUNT(*) as NumarUnitati " +
-                "FROM Dotari " +
-                "GROUP BY TipDotare, Stare " +
-                "ORDER BY TipDotare";
+                "FROM Dotari GROUP BY TipDotare, Stare ORDER BY TipDotare";
         return jdbcTemplate.queryForList(sql);
     }
 
@@ -114,7 +121,7 @@ public class DatabaseService {
     }
 
     private boolean isValidTable(String tableName) {
-        return Arrays.asList("Dotari", "Sali", "Facultati", "Departament", "Caracteristici", "SalaDotari").stream()
+        return Arrays.asList("Dotari", "Sali", "Facultati", "Departament", "Utilizatori", "SalaDotari").stream()
                 .anyMatch(t -> t.equalsIgnoreCase(tableName));
     }
 }

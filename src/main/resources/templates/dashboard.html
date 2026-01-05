@@ -30,11 +30,11 @@
                     <select name="selectedTable" class="form-select border-0 bg-light shadow-sm mb-2" onchange="this.form.submit()" style="height: 48px; border-radius: 8px;">
                         <option value="" disabled selected>Alege o optiune...</option>
                         <optgroup label="Rapoarte Complexe">
-                            <option value="COMPLEX_REPORT" th:selected="${selectedTable == 'COMPLEX_REPORT'}">1. Dotari per Facultate</option>
-                            <option value="ROOMS_AVG" th:selected="${selectedTable == 'ROOMS_AVG'}">2. Sali peste Medie</option>
-                            <option value="DEPT_STATS" th:selected="${selectedTable == 'DEPT_STATS'}">3. Top Departamente</option>
-                            <option value="ASSET_LOC" th:selected="${selectedTable == 'ASSET_LOC'}">4. Locatie Dotari</option>
-                            <option value="STATUS_ANALYSIS" th:selected="${selectedTable == 'STATUS_ANALYSIS'}">5. Analiza Stare Inventar</option>
+                            <option value="COMPLEX_REPORT" th:selected="${selectedTable == 'COMPLEX_REPORT'}">Dotari per Facultate</option>
+                            <option value="ROOMS_AVG" th:selected="${selectedTable == 'ROOMS_AVG'}">Sali peste Medie</option>
+                            <option value="DEPT_STATS" th:selected="${selectedTable == 'DEPT_STATS'}">Top Departamente</option>
+                            <option value="ASSET_LOC" th:selected="${selectedTable == 'ASSET_LOC'}">Locatie Dotari</option>
+                            <option value="STATUS_ANALYSIS" th:selected="${selectedTable == 'STATUS_ANALYSIS'}">Analiza Stare Inventar</option>
                         </optgroup>
                         <optgroup label="Gestionare Tabele">
                             <option th:each="t : ${tables}" th:value="${t}" th:text="${t}" th:selected="${t == selectedTable}"></option>

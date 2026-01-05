@@ -1,3 +1,7 @@
+/** Clasa pentru gestionarea fluxului de date intre interfata web si baza de date
+ * @author David Matei
+ * @version 5 Ianuarie 2026
+ */
 package io.github.davidmatei1902.uni_assets.controller;
 
 import io.github.davidmatei1902.uni_assets.service.DatabaseService;
@@ -15,7 +19,9 @@ public class AppController {
     private DatabaseService databaseService;
 
     @GetMapping("/")
-    public String showLogin() { return "login"; }
+    public String showLogin() {
+        return "login";
+    }
 
     @PostMapping("/login")
     public String processLogin(@RequestParam String username, @RequestParam String password, HttpSession session, Model model) {
@@ -71,8 +77,8 @@ public class AppController {
                     tableDescription = "Prezinta starea de functionare a inventarului pe categorii de obiecte.";
                     break;
                 default:
-                    resultData = databaseService.getTableData(selectedTable);
-                    tableDescription = "Lista completa a inregistrarilor din tabela.";
+                    resultData = databaseService.getSortedTableData(selectedTable);
+                    tableDescription = "Lista completa a inregistrarilor din tabela (Sortata alfabetic in Java).";
                     List<String> columns = databaseService.getTableColumns(selectedTable);
                     columns.removeIf(c -> c.toLowerCase().contains("id"));
                     model.addAttribute("editColumns", columns);
