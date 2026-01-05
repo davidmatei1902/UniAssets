@@ -94,7 +94,7 @@
                     <div class="tab-pane fade" id="update" th:if="${editColumns}">
                         <form action="/update" method="post" class="p-2">
                             <input type="hidden" name="tableName" th:value="${selectedTable}">
-                            <div class="mb-4"><label class="form-label fw-bold text-warning">Inregistrare de modificat (Identificator):</label><input type="text" name="targetName" class="form-control border-warning shadow-sm" required></div>
+                            <div class="mb-4"><label class="form-label fw-bold text-warning">Numele inregistrarii de modificat:</label><input type="text" name="targetName" class="form-control border-warning shadow-sm" placeholder="Ex: Numele actual" required><p class="small text-muted mt-1">Regula 2: Identificare dupa nume, nu dupa ID.</p></div>
                             <hr><div class="row g-4"><div class="col-md-6" th:each="col : ${editColumns}"><label class="form-label small fw-bold text-muted" th:text="'Noua valoare pentru ' + ${col}"></label><input type="text" th:name="${col}" class="form-control bg-light border-0 py-2"></div></div>
                             <div class="text-end mt-5"><button type="submit" class="btn btn-warning text-white px-5 py-2 rounded-pill shadow-sm">Salveaza Modificarile</button></div>
                         </form>
@@ -103,8 +103,8 @@
                     <div class="tab-pane fade text-center py-5" id="delete" th:if="${editColumns}">
                         <form action="/delete" method="post" onsubmit="return confirm('Sunteti sigur ca doriti sa stergeti inregistrarea?')">
                             <input type="hidden" name="tableName" th:value="${selectedTable}">
-                            <div class="mb-4"><h5 class="fw-bold text-danger">Eliminare Inregistrare</h5><p class="text-muted small">Introduceti identificatorul exact pentru stergere.</p></div>
-                            <input type="text" name="identifier" class="form-control w-50 mx-auto mb-3 text-center py-2 border-0 bg-light shadow-sm" placeholder="Ex: Numele de sters" required><button type="submit" class="btn btn-danger px-5 py-2 rounded-pill">Elimina Definitiv</button>
+                            <div class="mb-4"><h5 class="fw-bold">Stergere dupa Nume</h5><p class="text-muted small">Introduceti numele exact al inregistrarii pentru eliminare.</p></div>
+                            <input type="text" name="identifier" class="form-control w-50 mx-auto mb-3 text-center py-2 border-0 bg-light" placeholder="Ex: EC101" required><button type="submit" class="btn btn-danger px-5 py-2 rounded-pill">Elimina</button>
                         </form>
                     </div>
                 </div>
