@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class DatabaseService {
@@ -16,9 +17,29 @@ public class DatabaseService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private static final List<String> ALLOWED_TABLES = List.of(
-            "Dotari", "Sali", "Facultati", "Departament", "Utilizatori", "SalaDotari", "Caracteristici"
+    private static final List<String> PUBLIC_TABLES = List.of(
+            "Dotari", "Sali", "Facultati", "Departament", "Caracteristici"
     );
+
+    private static final List<String> SECRET_TABLES = List.of(
+            "SalaDotari", "DotariCaracteristici", "SalaDepartament", "Utilizatori"
+    );
+
+    public List<String> getAllowedTables(boolean showSecret) {
+        if (showSecret) {
+            return Stream.concat(PUBLIC_TABLES.stream(), SECRET_TABLES.stream())
+                    .collect(Collectors.toList());
+        }
+        return PUBLIC_TABLES;
+    }
+
+    public List<String> getPublicTables() {
+        return PUBLIC_TABLES;
+    }
+
+    public List<String> getSecretTables() {
+        return SECRET_TABLES;
+    }
 
     public boolean checkLogin(String username, String password) {
         String sql = "SELECT COUNT(*) FROM Utilizatori WHERE username = ? AND parola = ?";
@@ -29,9 +50,7 @@ public class DatabaseService {
     public List<Map<String, Object>> getSortedTableData(String tableName) {
         if (!isValidTable(tableName)) throw new IllegalArgumentException("Acces interzis!");
         List<Map<String, Object>> data = jdbcTemplate.queryForList("SELECT * FROM " + tableName);
-
         String nameCol = getNameColumn(tableName);
-
         return data.stream()
                 .sorted((m1, m2) -> {
                     String v1 = m1.get(nameCol) != null ? m1.get(nameCol).toString() : "";
@@ -121,11 +140,16 @@ public class DatabaseService {
             case "sali": return "NumeSala";
             case "dotari": return "NumeDotare";
             case "caracteristici": return "NumeCaracteristica";
-            default: return "Nume";
+            case "utilizatori": return "username";
+            case "saladotari": return "SalaID";
+            case "dotaricaracteristici": return "DotareID";
+            case "saladepartament": return "SalaID";
+            default: return "ID";
         }
     }
 
     private boolean isValidTable(String tableName) {
-        return ALLOWED_TABLES.stream().anyMatch(t -> t.equalsIgnoreCase(tableName));
+        return Stream.concat(PUBLIC_TABLES.stream(), SECRET_TABLES.stream())
+                .anyMatch(t -> t.equalsIgnoreCase(tableName));
     }
 }

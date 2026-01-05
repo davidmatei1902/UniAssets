@@ -42,11 +42,22 @@ public class AppController {
     @GetMapping("/dashboard")
     public String showDashboard(HttpSession session, Model model,
                                 @RequestParam(required = false) String selectedTable,
-                                @RequestParam(required = false) String filterParam) {
+                                @RequestParam(required = false) String filterParam,
+                                @RequestParam(required = false, defaultValue = "false") boolean showSecret) {
         if (session.getAttribute("user") == null) return "redirect:/";
 
-        model.addAttribute("tables", List.of("Facultati", "Departament", "Sali", "Dotari", "Caracteristici"));
+        if (!showSecret && selectedTable != null) {
+            boolean isSecret = databaseService.getSecretTables().stream()
+                    .anyMatch(t -> t.equalsIgnoreCase(selectedTable));
+
+            if (isSecret) {
+                return "redirect:/dashboard"; // redirect daca utilizatorul a ascuns tabelele in timp ce vizualiza una secreta
+            }
+        }
+
+        model.addAttribute("tables", databaseService.getAllowedTables(showSecret));
         model.addAttribute("selectedTable", selectedTable);
+        model.addAttribute("showSecret", showSecret);
 
         if (selectedTable != null) {
             List<Map<String, Object>> resultData;
@@ -78,7 +89,7 @@ public class AppController {
                     break;
                 default:
                     resultData = databaseService.getSortedTableData(selectedTable);
-                    tableDescription = "Lista completa a inregistrarilor din tabela (Sortata alfabetic in Java).";
+                    tableDescription = "Lista completa a inregistrarilor din tabela (Sortata alfabetic).";
                     List<String> columns = databaseService.getTableColumns(selectedTable);
                     columns.removeIf(c -> c.toLowerCase().contains("id"));
                     model.addAttribute("editColumns", columns);
