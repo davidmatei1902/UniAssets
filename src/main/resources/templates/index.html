@@ -2,7 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>UniAssets - Welcome Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniAssets - Management Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/global.css}">
     <link rel="stylesheet" th:href="@{/css/index.css}">
@@ -21,58 +22,204 @@
     <div class="hero-inner-container">
         <div class="hero-content-box text-start">
             <h1 class="display-3 fw-bold mb-4">
-                Gestionați Dotările cu <span class="text-primary-gradient">Precizie.</span>
+                Control Total asupra <span class="text-primary-gradient">Infrastructurii.</span>
             </h1>
-            <p class="lead mb-5 text-white" style="opacity: 0.85;">
-                Platformă pentru evidența obiectelor și echipamentelor universității.
-                Urmărește ușor tot inventarul și resursele din facultăți într-un singur loc.
+            <p class="lead mb-5 text-white" style="opacity: 0.8;">
+                Soluția centralizată pentru evidența, monitorizarea și gestionarea
+                întregului inventar academic din cadrul universității.
             </p>
-            <div class="d-flex gap-3 justify-content-start">
-                <a href="/login" class="btn btn-primary btn-lg px-5 py-3 rounded-pill-custom fw-bold shadow-sm">Acces Sistem</a>
-                <a href="#features" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill-custom fw-bold">Module Proiect</a>
+            <div class="d-flex flex-column gap-3 justify-content-start align-items-center align-items-md-start" style="max-width: 400px;">
+                <div class="w-100">
+                    <a href="/login" class="btn btn-primary btn-lg py-3 rounded-pill-custom fw-bold shadow-sm text-decoration-none d-block w-100">
+                        Acces Sistem
+                    </a>
+                </div>
+
+                <div class="d-flex flex-nowrap gap-2 w-100">
+                    <a href="#assets-catalog" class="btn btn-outline-light px-2 py-3 rounded-pill-custom fw-semibold text-decoration-none"
+                       style="font-size: 0.9rem; flex: 1; border-color: rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center;">
+                        Catalog Active
+                    </a>
+
+                    <a href="#faculties-overview" class="btn btn-outline-light px-2 py-3 rounded-pill-custom fw-semibold text-decoration-none"
+                       style="font-size: 0.9rem; flex: 1; border-color: rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center;">
+                        Explorare Facultăți
+                    </a>
+                </div>
             </div>
         </div>
-        <div style="position: absolute; bottom: 30px; right: 40px;" class="d-none d-md-block">
-            <span class="badge rounded-pill px-3 py-2" style="background: rgba(0,0,0,0.3); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);">
+        <div class="status-badge d-none d-md-block" style="position: absolute; bottom: 30px; right: 40px;">
+            <span class="badge rounded-pill px-3 py-2" style="background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);">
                 <span style="color: #28a745;">●</span> System Status: Online
             </span>
         </div>
     </div>
 </header>
 
-<section id="features" class="container py-5 mt-5">
-    <div class="text-center mb-5">
-        <h2 class="fw-bold text-white">Componentele Gestiunii</h2>
-        <div class="underline"></div>
-    </div>
-    <div class="row g-4 text-center">
-        <div class="col-md-4">
-            <div class="card feature-card h-100 p-5 shadow-sm">
-                <div class="mb-4"><h1 class="display-4">🏢</h1></div>
-                <h5 class="fw-bold">Infrastructură</h5>
-                <p class="small">Evidența ierarhică a facultăților, departamentelor și a sălilor alocate procesului educațional.</p>
-            </div>
+<section id="features" class="py-5" style="background-color: var(--index-pure-black);">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold text-white">Nucleul Platformei</h2>
+            <p class="text-white-50 small">Module fundamentale pentru controlul ecosistemului universitar</p>
+            <div class="underline" style="width: 50px; height: 4px; background: #0d6efd; margin: 15px auto;"></div>
         </div>
-        <div class="col-md-4">
-            <div class="card feature-card h-100 p-5 shadow-sm">
-                <div class="mb-4"><h1 class="display-4">💻</h1></div>
-                <h5 class="fw-bold">Inventar Tehnic</h5>
-                <p class="small">Monitorizarea completă a echipamentelor IT, de la specificații hardware până la locația fizică.</p>
+        <div class="row g-4 text-center">
+            <div class="col-md-4">
+                <div class="card feature-card h-100 p-5">
+                    <div class="mb-4">
+                        <span class="display-4" style="filter: drop-shadow(0 0 10px rgba(13, 110, 253, 0.5));">🏢</span>
+                    </div>
+                    <h5 class="fw-bold text-white mb-3">Arhitectură Resurse</h5>
+                    <p class="small text-white-50">Gestiunea ierarhică a spațiilor, de la ansambluri de facultăți până la laboratoare specifice.</p>
+                </div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card feature-card h-100 p-5 shadow-sm">
-                <div class="mb-4"><h1 class="display-4">📊</h1></div>
-                <h5 class="fw-bold">Rapoarte SQL</h5>
-                <p class="small">Interogări complexe pentru statistici privind gradul de dotare și optimizarea resurselor.</p>
+            <div class="col-md-4">
+                <div class="card feature-card h-100 p-5">
+                    <div class="mb-4">
+                        <span class="display-4" style="filter: drop-shadow(0 0 10px rgba(13, 110, 253, 0.5));">💻</span>
+                    </div>
+                    <h5 class="fw-bold text-white mb-3">Monitorizare Activă</h5>
+                    <p class="small text-white-50">Urmărirea fluxului de echipamente IT și tehnice prin coduri de inventar unice.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card h-100 p-5">
+                    <div class="mb-4">
+                        <span class="display-4" style="filter: drop-shadow(0 0 10px rgba(13, 110, 253, 0.5));">📊</span>
+                    </div>
+                    <h5 class="fw-bold text-white mb-3">Analiză Date SQL</h5>
+                    <p class="small text-white-50">Generarea de rapoarte complexe pentru audit și optimizarea dotărilor academice.</p>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<footer class="py-4 mt-5" style="border-top: 1px solid rgba(255,255,255,0.05);">
+<section id="assets-catalog">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold text-white">Active Monitorizate</h2>
+            <p class="text-white-50 small">Resurse gestionate în timp real prin platformă</p>
+            <div class="underline" style="width: 50px; height: 4px; background: #0d6efd; margin: 15px auto;"></div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="card asset-card border-0">
+                    <img th:src="@{/images/university_assets_robot_arm.jpg}" class="asset-img-top" alt="Brat Robotic">
+                    <div class="card-body text-center p-3 text-white">Brațe Robotice</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card asset-card border-0">
+                    <img th:src="@{/images/university_assets_3d_printer.jpg}" class="asset-img-top" alt="3D Printer">
+                    <div class="card-body text-center p-3 text-white">Imprimante 3D</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card asset-card border-0">
+                    <img th:src="@{/images/university_assets_destkop_workstation.jpg}" class="asset-img-top" alt="Workstation">
+                    <div class="card-body text-center p-3 text-white">Stații Workstation</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card asset-card border-0">
+                    <img th:src="@{/images/university_assets_mesh_router.jpg}" class="asset-img-top" alt="Networking">
+                    <div class="card-body text-center p-3 text-white">Echipamente Rețea</div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card asset-card border-0">
+                    <img th:src="@{/images/university_assets_multimeter.jpg}" class="asset-img-top" alt="Multimeter">
+                    <div class="card-body text-center p-3 text-white">Multimetre</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card asset-card border-0">
+                    <img th:src="@{/images/university_assets_projector.jpg}" class="asset-img-top" alt="Projector">
+                    <div class="card-body text-center p-3 text-white">Video-Proiector</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="faculties-overview" class="py-5" style="background-color: var(--index-pure-black);">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold text-white">Infrastructură Academică</h2>
+            <p class="text-white-50 small">Facultăți integrate în sistemul de management al activelor</p>
+            <div class="underline" style="width: 50px; height: 4px; background: #0d6efd; margin: 15px auto;"></div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="card asset-card border-0 h-100">
+                    <img th:src="@{/images/university_faculty_computer_science_1.jpg}" class="asset-img-top" alt="Automatică și Calculatoare">
+                    <div class="card-body text-center p-3 text-white">
+                        <h6 class="fw-bold mb-1">Automatică și Calculatoare</h6>
+                        <p class="small text-white-50 mb-0">Sisteme de calcul și laboratoare de robotică avansată</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card asset-card border-0 h-100">
+                    <img th:src="@{/images/university_faculty_electronic_engineering.jpg}" class="asset-img-top" alt="Electronică">
+                    <div class="card-body text-center p-3 text-white">
+                        <h6 class="fw-bold mb-1">Electronică și Telecomunicații</h6>
+                        <p class="small text-white-50 mb-0">Echipamente de telecomunicații și procesare de semnal</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card asset-card border-0 h-100">
+                    <img th:src="@{/images/university_faculty_mechanical_engineering.jpg}" class="asset-img-top" alt="Mecanică">
+                    <div class="card-body text-center p-3 text-white">
+                        <h6 class="fw-bold mb-1">Mecanică și Tehnologie</h6>
+                        <p class="small text-white-50 mb-0">Ateliere de proiectare și sisteme de producție industrială</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card asset-card border-0 h-100">
+                    <img th:src="@{/images/university_faculty_chemical_engineering.jpg}" class="asset-img-top" alt="Inginerie Chimică">
+                    <div class="card-body text-center p-3 text-white">
+                        <h6 class="fw-bold mb-1">Inginerie Chimică</h6>
+                        <p class="small text-white-50 mb-0">Laboratoare de analiză chimică și procese biotehnologice</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card asset-card border-0 h-100">
+                    <img th:src="@{/images/university_faculty_business_management.jpg}" class="asset-img-top" alt="AIMA">
+                    <div class="card-body text-center p-3 text-white">
+                        <h6 class="fw-bold mb-1">Antreprenoriat și Management</h6>
+                        <p class="small text-white-50 mb-0">Hub-uri de inovație și gestiune digitală a afacerilor</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card asset-card border-0 h-100">
+                    <img th:src="@{/images/university_faculty_transport_engineering.jpg}" class="asset-img-top" alt="Transporturi">
+                    <div class="card-body text-center p-3 text-white">
+                        <h6 class="fw-bold mb-1">Ingineria Transporturilor</h6>
+                        <p class="small text-white-50 mb-0">Sisteme inteligente de trafic și logistică feroviară</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<footer>
     <div class="container text-center text-white-50">
-        <p class="small mb-0">&copy; 2026 UniAssets Manager - David Matei</p>
+        <p class="small mb-0">&copy; 2026 University Assets Manager - David Matei</p>
     </div>
 </footer>
 

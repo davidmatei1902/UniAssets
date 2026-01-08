@@ -1,32 +1,20 @@
 :root {
     --primary-color: #0d6efd;
-    --dark-navy: #0d1117;
-    --navy-secondary: #161b22;
-    --glass-bg: rgba(22, 27, 34, 0.7);
-    --text-main: #f0f6fc;
+    --bg-light: #f8f9fa;
+    --dark-navy: #121417;
+
+    --index-pure-black: #000000;
+    --index-rich-black: #05070a;
+    --index-nav-bg: #0a0c10;
+    --index-card-bg: rgba(255, 255, 255, 0.03);
 }
 
 body {
-    background-color: var(--dark-navy);
-    color: var(--text-main);
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    overflow-x: hidden;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-light);
 }
 
 .rounded-pill-custom {
     border-radius: 50px;
-}
-
-::-webkit-scrollbar {
-    width: 8px;
-}
-::-webkit-scrollbar-track {
-    background: var(--dark-navy);
-}
-::-webkit-scrollbar-thumb {
-    background: #30363d;
-    border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: #484f58;
 }

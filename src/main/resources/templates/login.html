@@ -10,28 +10,31 @@
 <body class="login-body">
 
 <div class="login-container">
-    <div class="card login-card p-4 shadow">
-        <div class="text-center mb-4">
-            <h3 class="fw-bold">Autentificare</h3>
-            <p class="text-muted small">Introduceți credențialele pentru acces</p>
-        </div>
+    <div class="login-card p-4"> <div class="text-center mb-5">
+        <h3 class="fw-bold mb-2">Autentificare</h3>
+        <p class="text-white-50 small" style="opacity: 0.6;">Introduceți credențialele pentru acces</p>
+    </div>
 
-        <div th:if="${error}" class="alert alert-danger rounded-3 small text-center" th:text="${error}"></div>
+        <div th:if="${error}" class="alert alert-danger rounded-3 small text-center bg-danger bg-opacity-10 border-danger border-opacity-25 text-danger" th:text="${error}"></div>
 
         <form action="/login" method="post">
-            <div class="mb-3">
-                <label class="form-label small fw-bold text-muted">Utilizator</label>
-                <input type="text" name="username" class="form-control py-2" required>
+            <div class="mb-4">
+                <label class="form-label small fw-bold text-white-50 mb-2">Utilizator</label>
+                <input type="text" name="username" class="form-control py-2 px-3" placeholder="Introduceți utilizatorul..." required autofocus>
             </div>
-            <div class="mb-3">
-                <label class="form-label small fw-bold text-muted">Parolă</label>
-                <input type="password" name="password" class="form-control py-2" required>
+            <div class="mb-4">
+                <label class="form-label small fw-bold text-white-50 mb-2">Parolă</label>
+                <input type="password" name="password" class="form-control py-2 px-3" placeholder="Introduceți parola..." required>
             </div>
-            <button type="submit" class="btn btn-primary w-100 py-2 rounded-pill-custom shadow-sm fw-bold">Intră în cont</button>
+            <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill-custom shadow-sm fw-bold mt-2">
+                Intră în cont
+            </button>
         </form>
 
-        <div class="text-center mt-4">
-            <a href="/" class="text-decoration-none small text-secondary">← Înapoi la pagina principală</a>
+        <div class="text-center mt-5">
+            <a href="/" class="text-decoration-none small text-secondary">
+                <i class="bi bi-arrow-left"></i> ← Înapoi la pagina principală
+            </a>
         </div>
     </div>
 </div>
