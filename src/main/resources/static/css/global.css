@@ -1,0 +1,32 @@
+:root {
+    --primary-color: #0d6efd;
+    --dark-navy: #0d1117;
+    --navy-secondary: #161b22;
+    --glass-bg: rgba(22, 27, 34, 0.7);
+    --text-main: #f0f6fc;
+}
+
+body {
+    background-color: var(--dark-navy);
+    color: var(--text-main);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+}
+
+.rounded-pill-custom {
+    border-radius: 50px;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--dark-navy);
+}
+::-webkit-scrollbar-thumb {
+    background: #30363d;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #484f58;
+}

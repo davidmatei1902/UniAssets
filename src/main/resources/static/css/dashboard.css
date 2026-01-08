@@ -1,0 +1,71 @@
+.navbar {
+    background-color: var(--dark-nav) !important;
+    border-bottom: 1px solid #333;
+    padding: 10px 0;
+}
+
+.navbar-brand {
+    color: white !important;
+}
+
+.sidebar-card {
+    border: none;
+    border-radius: 12px;
+}
+
+.table-container {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.btn-logout {
+    border: 2px solid #ff4d4d;
+    color: white !important;
+    border-radius: 50px;
+    transition: 0.3s;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.btn-logout:hover {
+    background: #ff4d4d;
+    color: white !important;
+}
+
+.nav-tabs .nav-link {
+    border: 2px solid transparent !important;
+    border-radius: 8px 8px 0 0 !important;
+    margin-right: 10px;
+    transition: all 0.2s ease-in-out;
+    padding: 10px 20px;
+    background: none !important;
+    border-bottom: 3px solid transparent !important;
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: #dee2e6 #dee2e6 transparent #dee2e6 !important;
+}
+
+
+.nav-tabs .nav-link.active {
+    border-bottom: 3px solid #000000 !important;
+    color: #000000 !important;
+    font-weight: bold;
+}
+
+.nav-tabs .nav-link.text-success.active {
+    border-bottom: 3px solid #198754 !important;
+    color: #198754 !important;
+}
+
+.nav-tabs .nav-link.text-warning.active {
+    border-bottom: 3px solid #ffc107 !important;
+    color: #ffc107 !important;
+}
+
+.nav-tabs .nav-link.text-danger.active {
+    border-bottom: 3px solid #dc3545 !important;
+    color: #dc3545 !important;
+}

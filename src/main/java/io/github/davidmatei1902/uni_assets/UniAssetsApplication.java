@@ -1,6 +1,6 @@
 /** Clasa principala pentru pornirea aplicatiei Spring Boot
  * @author David Matei
- * @version 5 Ianuarie 2026
+ * @version 10 Decembrie 2025
  */
 package io.github.davidmatei1902.uni_assets;
 

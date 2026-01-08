@@ -1,6 +1,6 @@
 /** Clasa Service pentru operatiile de manipulare a datelor si logica de procesare
  * @author David Matei
- * @version 5 Ianuarie 2026
+ * @version 8 Ianuarie 2026
  */
 package io.github.davidmatei1902.uni_assets.service;
 
@@ -25,20 +25,42 @@ public class DatabaseService {
             "SalaDotari", "DotariCaracteristici", "SalaDepartament", "Utilizatori"
     );
 
+    private void validateFormData(Map<String, String> formData) {
+        for (Map.Entry<String, String> entry : formData.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+
+            if (key.equals("tableName") || key.equals("targetName") || key.toLowerCase().contains("id")) continue;
+
+            // validare lungime nume
+            if (key.toLowerCase().contains("nume") || key.toLowerCase().contains("username")) {
+                if (value == null || value.trim().length() < 3) {
+                    throw new IllegalArgumentException("Câmpul '" + key + "' trebuie să aibă cel puțin 3 caractere!");
+                }
+            }
+
+            // validare valori numerice (Capacitate, Cantitate, Etaj)
+            if (key.toLowerCase().contains("cantitate") ||
+                    key.toLowerCase().contains("capacitate") ||
+                    key.toLowerCase().contains("etaj")) {
+                try {
+                    int val = Integer.parseInt(value);
+                    if (val < 0) {
+                        throw new IllegalArgumentException("Valoarea pentru '" + key + "' nu poate fi negativă!");
+                    }
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Câmpul '" + key + "' trebuie să fie un număr valid!");
+                }
+            }
+        }
+    }
+
     public List<String> getAllowedTables(boolean showSecret) {
         if (showSecret) {
             return Stream.concat(PUBLIC_TABLES.stream(), SECRET_TABLES.stream())
                     .collect(Collectors.toList());
         }
         return PUBLIC_TABLES;
-    }
-
-    public List<String> getPublicTables() {
-        return PUBLIC_TABLES;
-    }
-
-    public List<String> getSecretTables() {
-        return SECRET_TABLES;
     }
 
     public boolean checkLogin(String username, String password) {
@@ -108,6 +130,7 @@ public class DatabaseService {
     }
 
     public void insertRecord(String tableName, Map<String, String> formData) {
+        validateFormData(formData);
         List<String> columns = new ArrayList<>();
         List<String> values = new ArrayList<>();
         List<Object> params = new ArrayList<>();
@@ -121,6 +144,7 @@ public class DatabaseService {
     }
 
     public void updateRecord(String tableName, String targetName, Map<String, String> formData) {
+        validateFormData(formData);
         String nameColumn = getNameColumn(tableName);
         List<String> sets = new ArrayList<>();
         List<Object> params = new ArrayList<>();
@@ -146,9 +170,6 @@ public class DatabaseService {
             case "dotari": return "NumeDotare";
             case "caracteristici": return "NumeCaracteristica";
             case "utilizatori": return "username";
-            case "saladotari": return "SalaID";
-            case "dotaricaracteristici": return "DotareID";
-            case "saladepartament": return "SalaID";
             default: return "ID";
         }
     }
@@ -157,4 +178,6 @@ public class DatabaseService {
         return Stream.concat(PUBLIC_TABLES.stream(), SECRET_TABLES.stream())
                 .anyMatch(t -> t.equalsIgnoreCase(tableName));
     }
+
+    public List<String> getSecretTables() { return SECRET_TABLES; }
 }
