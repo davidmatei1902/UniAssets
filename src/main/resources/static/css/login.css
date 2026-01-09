@@ -3,15 +3,23 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #050505;
+    background: transparent;
     padding: 20px;
+}
+
+.login-body {
+    margin: 0;
+    padding: 0;
+    background: radial-gradient(circle at center, #0d1b2a 0%, #05070a 100%) !important;
+    background-attachment: fixed;
+    min-height: 100vh;
 }
 
 .login-card {
     background: rgba(255, 255, 255, 0.03) !important;
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 25px !important;
+    border-radius: 50px !important;
     padding: 3rem !important;
     width: 100%;
     max-width: 420px;

@@ -7,6 +7,13 @@
     --index-rich-black: #05070a;
     --index-nav-bg: #0a0c10;
     --index-card-bg: rgba(255, 255, 255, 0.03);
+
+    --dashboard-bg-color: #05070a;
+    --dashboard-card-bg: rgba(255, 255, 255, 0.05);
+    --dashboard-accent-blue: #0d6efd;
+    --dashboard-card-shadow: rgba(0, 0, 0, 0.5);
+    --dashboard-border-color: rgba(255, 255, 255, 0.1);
+    --dashboard-text-main: #e0e0e0;
 }
 
 body {

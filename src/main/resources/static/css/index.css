@@ -123,6 +123,6 @@
 
 footer {
     background-color: var(--index-pure-black);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
     padding: 25px 0;
 }

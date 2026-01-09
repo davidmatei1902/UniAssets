@@ -73,7 +73,7 @@ public class AppController {
                 case "ROOMS_AVG":
                     resultData = databaseService.getRoomsAboveAverageCapacity();
                     Double avg = databaseService.getAverageCapacity();
-                    model.addAttribute("avgValue", (avg != null) ? String.format("%.2f", avg) : "0.00");
+                    model.addAttribute("avgValue", (avg != null) ? String.format("%.0f", avg) : "0.00");
                     tableDescription = "Identifică sălile care au o capacitate mai mare decât media universității.";
                     break;
                 case "DEPT_STATS":
