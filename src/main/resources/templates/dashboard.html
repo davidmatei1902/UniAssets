@@ -33,7 +33,8 @@
                             <option value="ROOMS_AVG" th:selected="${selectedTable == 'ROOMS_AVG'}">Săli peste Medie</option>
                             <option value="DEPT_STATS" th:selected="${selectedTable == 'DEPT_STATS'}">Top Departamente</option>
                             <option value="ASSET_LOC" th:selected="${selectedTable == 'ASSET_LOC'}">Locație Dotări</option>
-                            <option value="STATUS_ANALYSIS" th:selected="${selectedTable == 'STATUS_ANALYSIS'}">Analiză Inventar</option>
+<!--                            <option value="STATUS_ANALYSIS" th:selected="${selectedTable == 'STATUS_ANALYSIS'}">Analiză Inventar</option>-->
+                            <option value="STATUS_ANALYSIS" th:selected="${selectedTable == 'STATUS_ANALYSIS'}">Audit Critic Locații</option>
                         </optgroup>
                         <optgroup label="Gestionare Tabele">
                             <option th:each="t : ${tables}" th:value="${t}" th:text="${t}" th:selected="${t == selectedTable}"></option>

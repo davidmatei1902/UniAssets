@@ -118,9 +118,22 @@ public class DatabaseService {
         return jdbcTemplate.queryForList(sql, "%" + assetName + "%");
     }
 
+    // UNUSED
     public List<Map<String, Object>> getInventoryStatusAnalysis() {
         String sql = "SELECT TipDotare, Stare, COUNT(*) as NumarUnitati " +
                 "FROM Dotari GROUP BY TipDotare, Stare ORDER BY TipDotare";
+        return jdbcTemplate.queryForList(sql);
+    }
+
+    public List<Map<String, Object>> getLocationAuditReport() {
+        String sql = "SELECT s.NumeSala, s.Etaj, s.Capacitate, " +
+                "SUM(sd.Cantitate) as TotalObiecte, " +
+                "COUNT(CASE WHEN d.Stare != 'Functional' THEN 1 END) as Defecte_Mentenanta " +
+                "FROM Sali s " +
+                "JOIN SalaDotari sd ON s.SalaID = sd.SalaID " +
+                "JOIN Dotari d ON sd.DotareID = d.DotareID " +
+                "GROUP BY s.NumeSala, s.Etaj, s.Capacitate " +
+                "ORDER BY Defecte_Mentenanta DESC, TotalObiecte DESC";
         return jdbcTemplate.queryForList(sql);
     }
 

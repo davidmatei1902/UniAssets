@@ -86,9 +86,14 @@ public class AppController {
                     tableDescription = "Caută sala și etajul unde se află un anumit tip de obiect.";
                     model.addAttribute("currentParam", filterValue.isEmpty() ? "PC" : filterValue);
                     break;
+                    // UNUSED
+//                case "STATUS_ANALYSIS":
+//                    resultData = databaseService.getInventoryStatusAnalysis();
+//                    tableDescription = "Prezintă starea de funcționare a inventarului pe categorii de obiecte.";
+//                    break;
                 case "STATUS_ANALYSIS":
-                    resultData = databaseService.getInventoryStatusAnalysis();
-                    tableDescription = "Prezintă starea de funcționare a inventarului pe categorii de obiecte.";
+                    resultData = databaseService.getLocationAuditReport();
+                    tableDescription = "Analiză critică pe locații: Identifică sălile cu echipamente defecte și gradul total de dotare.";
                     break;
                 default:
                     resultData = databaseService.getSortedTableData(selectedTable);
