@@ -1,9 +1,11 @@
-/** Clasa Service pentru operatiile de manipulare a datelor si logica de procesare
+/** Clasa Service completa pentru operatiile de manipulare a datelor
  * @author David Matei
- * @version 8 Ianuarie 2026
+ * @version 10 Ianuarie 2026
  */
 package io.github.davidmatei1902.uni_assets.service;
 
+import io.github.davidmatei1902.uni_assets.model.Asset;
+import io.github.davidmatei1902.uni_assets.repository.AssetRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,9 @@ public class DatabaseService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private AssetRepository assetRepository;
+
     private static final List<String> PUBLIC_TABLES = List.of(
             "Dotari", "Sali", "Facultati", "Departament", "Caracteristici"
     );
@@ -25,29 +30,27 @@ public class DatabaseService {
             "SalaDotari", "DotariCaracteristici", "SalaDepartament", "Utilizatori"
     );
 
+    // METODA NOUA: Salvare prin JPA pentru a folosi validarile @Min, @Size (Cerinta A.1)
+    public void saveWithJPA(Asset asset) {
+        assetRepository.save(asset);
+    }
+
+    // --- TOATE METODELE TALE ORIGINALE ---
+
     private void validateFormData(Map<String, String> formData) {
         for (Map.Entry<String, String> entry : formData.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
-
             if (key.equals("tableName") || key.equals("targetName") || key.toLowerCase().contains("id")) continue;
-
-            // validare lungime nume
             if (key.toLowerCase().contains("nume") || key.toLowerCase().contains("username")) {
                 if (value == null || value.trim().length() < 3) {
                     throw new IllegalArgumentException("Câmpul '" + key + "' trebuie să aibă cel puțin 3 caractere!");
                 }
             }
-
-            // validare valori numerice (Capacitate, Cantitate, Etaj)
-            if (key.toLowerCase().contains("cantitate") ||
-                    key.toLowerCase().contains("capacitate") ||
-                    key.toLowerCase().contains("etaj")) {
+            if (key.toLowerCase().contains("cantitate") || key.toLowerCase().contains("capacitate") || key.toLowerCase().contains("etaj")) {
                 try {
                     int val = Integer.parseInt(value);
-                    if (val < 0) {
-                        throw new IllegalArgumentException("Valoarea pentru '" + key + "' nu poate fi negativă!");
-                    }
+                    if (val < 0) throw new IllegalArgumentException("Valoarea pentru '" + key + "' nu poate fi negativă!");
                 } catch (NumberFormatException e) {
                     throw new IllegalArgumentException("Câmpul '" + key + "' trebuie să fie un număr valid!");
                 }
@@ -56,11 +59,7 @@ public class DatabaseService {
     }
 
     public List<String> getAllowedTables(boolean showSecret) {
-        if (showSecret) {
-            return Stream.concat(PUBLIC_TABLES.stream(), SECRET_TABLES.stream())
-                    .collect(Collectors.toList());
-        }
-        return PUBLIC_TABLES;
+        return showSecret ? Stream.concat(PUBLIC_TABLES.stream(), SECRET_TABLES.stream()).collect(Collectors.toList()) : PUBLIC_TABLES;
     }
 
     public boolean checkLogin(String username, String password) {
@@ -73,13 +72,11 @@ public class DatabaseService {
         if (!isValidTable(tableName)) throw new IllegalArgumentException("Acces interzis!");
         List<Map<String, Object>> data = jdbcTemplate.queryForList("SELECT * FROM " + tableName);
         String nameCol = getNameColumn(tableName);
-        return data.stream()
-                .sorted((m1, m2) -> {
-                    String v1 = m1.get(nameCol) != null ? m1.get(nameCol).toString() : "";
-                    String v2 = m2.get(nameCol) != null ? m2.get(nameCol).toString() : "";
-                    return v1.compareToIgnoreCase(v2);
-                })
-                .collect(Collectors.toList());
+        return data.stream().sorted((m1, m2) -> {
+            String v1 = m1.get(nameCol) != null ? m1.get(nameCol).toString() : "";
+            String v2 = m2.get(nameCol) != null ? m2.get(nameCol).toString() : "";
+            return v1.compareToIgnoreCase(v2);
+        }).collect(Collectors.toList());
     }
 
     public List<Map<String, Object>> getAssetsByFaculty(String facultyCode) {
@@ -118,22 +115,11 @@ public class DatabaseService {
         return jdbcTemplate.queryForList(sql, "%" + assetName + "%");
     }
 
-    // UNUSED
-    public List<Map<String, Object>> getInventoryStatusAnalysis() {
-        String sql = "SELECT TipDotare, Stare, COUNT(*) as NumarUnitati " +
-                "FROM Dotari GROUP BY TipDotare, Stare ORDER BY TipDotare";
-        return jdbcTemplate.queryForList(sql);
-    }
-
     public List<Map<String, Object>> getLocationAuditReport() {
-        String sql = "SELECT s.NumeSala, s.Etaj, s.Capacitate, " +
-                "SUM(sd.Cantitate) as TotalObiecte, " +
+        String sql = "SELECT s.NumeSala, s.Etaj, s.Capacitate, SUM(sd.Cantitate) as TotalObiecte, " +
                 "COUNT(CASE WHEN d.Stare != 'Functional' THEN 1 END) as Defecte_Mentenanta " +
-                "FROM Sali s " +
-                "JOIN SalaDotari sd ON s.SalaID = sd.SalaID " +
-                "JOIN Dotari d ON sd.DotareID = d.DotareID " +
-                "GROUP BY s.NumeSala, s.Etaj, s.Capacitate " +
-                "ORDER BY Defecte_Mentenanta DESC, TotalObiecte DESC";
+                "FROM Sali s JOIN SalaDotari sd ON s.SalaID = sd.SalaID JOIN Dotari d ON sd.DotareID = d.DotareID " +
+                "GROUP BY s.NumeSala, s.Etaj, s.Capacitate ORDER BY Defecte_Mentenanta DESC, TotalObiecte DESC";
         return jdbcTemplate.queryForList(sql);
     }
 
@@ -142,32 +128,73 @@ public class DatabaseService {
         return jdbcTemplate.queryForList("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?", String.class, tableName);
     }
 
-    public void insertRecord(String tableName, Map<String, String> formData) {
-        validateFormData(formData);
-        List<String> columns = new ArrayList<>();
-        List<String> values = new ArrayList<>();
-        List<Object> params = new ArrayList<>();
-        for (Map.Entry<String, String> entry : formData.entrySet()) {
-            if (entry.getKey().toLowerCase().contains("id") || entry.getKey().equals("tableName")) continue;
-            columns.add(entry.getKey());
-            values.add("?");
-            params.add(entry.getValue());
-        }
-        jdbcTemplate.update("INSERT INTO " + tableName + " (" + String.join(", ", columns) + ") VALUES (" + String.join(", ", values) + ")", params.toArray());
+    public void insertRecord(String tableName, Map<String, String> params) {
+        String columns = String.join(", ", params.keySet());
+        String placeholders = params.keySet().stream()
+                .map(k -> "?")
+                .collect(Collectors.joining(", "));
+
+        String sql = "INSERT INTO " + tableName + " (" + columns + ") VALUES (" + placeholders + ")";
+
+        // 2. Extragem valorile cu suport pentru FLOAT (Greutate) și INT (Etaj/Capacitate)
+        Object[] values = params.values().stream().map(val -> {
+            try {
+                if (val == null) return null;
+                // Verificăm dacă este număr cu virgulă (ex: 2.5)
+                if (val.matches("-?\\d+\\.\\d+")) return Float.parseFloat(val);
+                // Verificăm dacă este număr întreg (ex: 10)
+                if (val.matches("-?\\d+")) return Integer.parseInt(val);
+                return val;
+            } catch (Exception e) {
+                return val;
+            }
+        }).toArray();
+
+        jdbcTemplate.update(sql, values);
     }
 
     public void updateRecord(String tableName, String targetName, Map<String, String> formData) {
-        validateFormData(formData);
         String nameColumn = getNameColumn(tableName);
         List<String> sets = new ArrayList<>();
         List<Object> params = new ArrayList<>();
+
         for (Map.Entry<String, String> entry : formData.entrySet()) {
-            if (entry.getKey().toLowerCase().contains("id") || entry.getKey().equals("tableName") || entry.getKey().equals("targetName")) continue;
-            sets.add(entry.getKey() + " = ?");
-            params.add(entry.getValue());
+            String key = entry.getKey();
+            String val = entry.getValue();
+
+            if (key.toLowerCase().contains("id") || key.equals("tableName") || key.equals("targetName")) continue;
+
+            sets.add(key + " = ?");
+
+            // Conversie robustă pentru UPDATE (asigură suportul pentru Greutate float)
+            try {
+                if (val != null && val.matches("-?\\d+\\.\\d+")) {
+                    params.add(Float.parseFloat(val));
+                } else if (val != null && val.matches("-?\\d+")) {
+                    params.add(Integer.parseInt(val));
+                } else {
+                    params.add(val);
+                }
+            } catch (Exception e) {
+                params.add(val);
+            }
         }
+
         params.add(targetName);
         jdbcTemplate.update("UPDATE " + tableName + " SET " + String.join(", ", sets) + " WHERE " + nameColumn + " = ?", params.toArray());
+    }
+
+    public void deleteRecord(String tableName, String identifier) {
+        // Identificăm coloana de tip "Nume" pentru tabelul respectiv
+        String columnName = getNameColumn(tableName);
+
+        String sql = "DELETE FROM " + tableName + " WHERE " + columnName + " = ?";
+
+        int rowsAffected = jdbcTemplate.update(sql, identifier);
+
+        if (rowsAffected == 0) {
+            throw new RuntimeException("Nu s-a găsit nicio înregistrare cu numele: " + identifier);
+        }
     }
 
     public void deleteByBusinessName(String tableName, String identifierValue) {
@@ -188,9 +215,15 @@ public class DatabaseService {
     }
 
     private boolean isValidTable(String tableName) {
-        return Stream.concat(PUBLIC_TABLES.stream(), SECRET_TABLES.stream())
-                .anyMatch(t -> t.equalsIgnoreCase(tableName));
+        return Stream.concat(PUBLIC_TABLES.stream(), SECRET_TABLES.stream()).anyMatch(t -> t.equalsIgnoreCase(tableName));
     }
 
-    public List<String> getSecretTables() { return SECRET_TABLES; }
+    public boolean checkDatabaseStatus() {
+        try {
+            Integer result = jdbcTemplate.queryForObject("SELECT 1", Integer.class);
+            return result != null && result == 1;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

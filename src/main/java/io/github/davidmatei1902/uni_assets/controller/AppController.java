@@ -1,14 +1,17 @@
-/** Clasa pentru gestionarea fluxului de date intre interfata web si baza de date
+/** Controller care gestioneaza rutele si validarea datelor
  * @author David Matei
- * @version 8 Ianuarie 2026
+ * @version 10 Ianuarie 2026
  */
 package io.github.davidmatei1902.uni_assets.controller;
 
+import io.github.davidmatei1902.uni_assets.model.Asset;
 import io.github.davidmatei1902.uni_assets.service.DatabaseService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.*;
@@ -20,16 +23,22 @@ public class AppController {
     private DatabaseService databaseService;
 
     @GetMapping("/")
-    public String showIndex() {
+    public String showIndex(Model model) {
+        boolean isDatabaseUp = false;
+        try {
+            isDatabaseUp = databaseService.checkDatabaseStatus();
+            model.addAttribute("systemStatus", isDatabaseUp ? "Online" : "Maintenance");
+            model.addAttribute("statusColor", isDatabaseUp ? "#28a745" : "#ffc107");
+        } catch (Exception e) {
+            model.addAttribute("systemStatus", "Offline");
+            model.addAttribute("statusColor", "#dc3545");
+        }
         return "index";
     }
 
     @GetMapping("/login")
     public String showLogin(HttpSession session) {
-        if (session.getAttribute("user") != null) {
-            return "redirect:/dashboard";
-        }
-        return "login";
+        return session.getAttribute("user") != null ? "redirect:/dashboard" : "login";
     }
 
     @PostMapping("/login")
@@ -40,12 +49,6 @@ public class AppController {
         }
         model.addAttribute("error", "Utilizator sau parolă incorectă!");
         return "login";
-    }
-
-    @GetMapping("/logout")
-    public String logout(HttpSession session) {
-        session.invalidate();
-        return "redirect:/";
     }
 
     @GetMapping("/dashboard")
@@ -62,50 +65,45 @@ public class AppController {
         if (selectedTable != null) {
             List<Map<String, Object>> resultData;
             String filterValue = (filterParam == null || filterParam.isEmpty()) ? "" : filterParam;
-            String tableDescription = "";
+            String desc = "";
 
             switch (selectedTable) {
                 case "COMPLEX_REPORT":
                     resultData = databaseService.getAssetsByFaculty(filterValue.isEmpty() ? "AC" : filterValue);
-                    tableDescription = "Afișează toate dotările și locația lor pentru o anumită facultate.";
+                    desc = "Afișează toate dotările și locația lor pentru o anumită facultate.";
                     model.addAttribute("currentParam", filterValue.isEmpty() ? "AC" : filterValue);
                     break;
                 case "ROOMS_AVG":
                     resultData = databaseService.getRoomsAboveAverageCapacity();
+                    desc = "Identifică sălile care au o capacitate mai mare decât media universității.";
                     Double avg = databaseService.getAverageCapacity();
                     model.addAttribute("avgValue", (avg != null) ? String.format("%.0f", avg) : "0.00");
-                    tableDescription = "Identifică sălile care au o capacitate mai mare decât media universității.";
                     break;
                 case "DEPT_STATS":
                     resultData = databaseService.getTopEquippedDepartments();
-                    tableDescription = "Afișează departamentele care dețin cele mai multe obiecte de inventar.";
+                    desc = "Afișează departamentele care dețin cele mai multe obiecte de inventar.";
                     model.addAttribute("thresholdValue", 5);
                     break;
                 case "ASSET_LOC":
                     resultData = databaseService.getAssetLocationByName(filterValue.isEmpty() ? "PC" : filterValue);
-                    tableDescription = "Caută sala și etajul unde se află un anumit tip de obiect.";
+                    desc = "Caută sala și etajul unde se află un anumit tip de obiect.";
                     model.addAttribute("currentParam", filterValue.isEmpty() ? "PC" : filterValue);
                     break;
-                    // UNUSED
-//                case "STATUS_ANALYSIS":
-//                    resultData = databaseService.getInventoryStatusAnalysis();
-//                    tableDescription = "Prezintă starea de funcționare a inventarului pe categorii de obiecte.";
-//                    break;
                 case "STATUS_ANALYSIS":
                     resultData = databaseService.getLocationAuditReport();
-                    tableDescription = "Analiză critică pe locații: Identifică sălile cu echipamente defecte și gradul total de dotare.";
+                    desc = "Audit critic locații: Identifică sălile cu echipamente defecte.";
                     break;
                 default:
                     resultData = databaseService.getSortedTableData(selectedTable);
-                    tableDescription = "Lista completă a înregistrărilor din tabelă (Sortată alfabetic).";
-                    List<String> columns = databaseService.getTableColumns(selectedTable);
-                    columns.removeIf(c -> c.toLowerCase().contains("id"));
-                    model.addAttribute("editColumns", columns);
+                    desc = "Tabel sortat alfabetic.";
+                    List<String> cols = databaseService.getTableColumns(selectedTable);
+                    cols.removeIf(c -> c.toLowerCase().contains("id"));
+                    model.addAttribute("editColumns", cols);
                     break;
             }
             model.addAttribute("tableData", resultData);
             if (!resultData.isEmpty()) model.addAttribute("columns", resultData.get(0).keySet());
-            model.addAttribute("tableDescription", tableDescription);
+            model.addAttribute("tableDescription", desc);
         }
         return "dashboard";
     }
@@ -113,10 +111,89 @@ public class AppController {
     @PostMapping("/insert")
     public String insertData(@RequestParam String tableName, @RequestParam Map<String, String> allParams, RedirectAttributes ra) {
         try {
-            databaseService.insertRecord(tableName, allParams);
-            return "redirect:/dashboard?selectedTable=" + tableName;
+            Map<String, String> dataParams = new HashMap<>(allParams);
+            dataParams.remove("tableName");
+
+            // 1. Gestionare Constrângeri SQL: Forțăm FacultateID pentru tabelul Departament
+            if (tableName.equalsIgnoreCase("Departament")) {
+                dataParams.put("FacultateID", "5");
+            }
+
+            // 2. Ierarhie de Validare Robustă (Previne conflictele între tipuri de date)
+            for (Map.Entry<String, String> entry : dataParams.entrySet()) {
+                String key = entry.getKey();
+                String value = (entry.getValue() != null) ? entry.getValue().trim() : "";
+
+                // Verificare câmp gol (Cerința A.1)
+                if (value.isEmpty()) {
+                    throw new IllegalArgumentException("Câmpul '" + key + "' nu poate fi gol!");
+                }
+
+                if (key.equalsIgnoreCase("Telefon")) {
+                    // Validare Telefon: Format XXX-XXX-XXXX
+                    if (!value.matches("^\\d{3}-\\d{3}-\\d{4}$")) {
+                        throw new IllegalArgumentException("Telefonul trebuie să fie de forma XXX-XXX-XXXX!");
+                    }
+                }
+                else if (key.equalsIgnoreCase("Website")) {
+                    // Validare Website: https://...
+                    if (!value.matches("^https://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}(/.*)?$")) {
+                        throw new IllegalArgumentException("Website-ul trebuie să înceapă cu https:// și să fie valid!");
+                    }
+                }
+                else if (key.equalsIgnoreCase("Greutate")) {
+                    // Validare Greutate: Permite FLOAT (ex: 12.5)
+                    if (!value.matches("^\\d+(\\.\\d+)?$")) {
+                        throw new IllegalArgumentException("Greutatea trebuie să fie un număr valid!");
+                    }
+                    if (Double.parseDouble(value) < 0) throw new IllegalArgumentException("Greutatea nu poate fi negativă!");
+                }
+                else if (value.matches("^-?\\d+$")) {
+                    // Validare Numere Întregi (Etaj, Capacitate - doar dacă nu sunt Telefon/Greutate)
+                    int numValue = Integer.parseInt(value);
+                    if (numValue < 0) throw new IllegalArgumentException("Câmpul '" + key + "' nu poate fi negativ!");
+                    if (key.equalsIgnoreCase("Capacitate") && numValue == 0) throw new IllegalArgumentException("Capacitatea minimă este 1!");
+                }
+                else {
+                    // Validare Text General (Regula de minim 3 caractere, excepție CodFacultate)
+                    if (key.equalsIgnoreCase("CodFacultate")) {
+                        if (value.length() < 2) throw new IllegalArgumentException("CodFacultate: minim 2 caractere!");
+                    } else if (!key.equalsIgnoreCase("FacultateID")) { // Ignorăm ID-ul forțat de la validarea de caractere
+                        if (value.length() < 3) throw new IllegalArgumentException("Câmpul '" + key + "': minim 3 caractere!");
+                    }
+                }
+            }
+
+            databaseService.insertRecord(tableName, dataParams);
+            ra.addFlashAttribute("successMessage", "Înregistrare adăugată cu succes!");
+
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            String detail = (e.getRootCause() != null) ? e.getRootCause().getMessage() : "Conflict de unicitate sau cheie externă.";
+            ra.addFlashAttribute("errorMessage", "La Inserare - Eroare SQL: " + detail);
         } catch (IllegalArgumentException e) {
-            ra.addFlashAttribute("errorMessage", e.getMessage());
+            ra.addFlashAttribute("errorMessage", "La Inserare - Eroare validare: " + e.getMessage());
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", "La Inserare - Eroare neprevăzută: " + e.getMessage());
+        }
+
+        return "redirect:/dashboard?selectedTable=" + tableName;
+    }
+
+    @PostMapping("/delete")
+    public String deleteData(@RequestParam String tableName, @RequestParam String identifier, RedirectAttributes ra) {
+        try {
+            // Validare: nu permitem ștergerea fără un identificator (Cerința A.1)
+            if (identifier == null || identifier.trim().isEmpty()) {
+                throw new IllegalArgumentException("Trebuie să introduceți un nume/identificator pentru ștergere!");
+            }
+
+            databaseService.deleteRecord(tableName, identifier);
+            ra.addFlashAttribute("successMessage", "Înregistrarea a fost ștearsă cu succes din " + tableName);
+
+            return "redirect:/dashboard?selectedTable=" + tableName;
+        } catch (Exception e) {
+            // Prindem erorile de constrângeri SQL (ex: nu poți șterge o facultate care are departamente)
+            ra.addFlashAttribute("errorMessage", "Eroare la ștergere: " + e.getMessage());
             return "redirect:/dashboard?selectedTable=" + tableName;
         }
     }
@@ -124,17 +201,58 @@ public class AppController {
     @PostMapping("/update")
     public String updateData(@RequestParam String tableName, @RequestParam String targetName, @RequestParam Map<String, String> allParams, RedirectAttributes ra) {
         try {
-            databaseService.updateRecord(tableName, targetName, allParams);
-            return "redirect:/dashboard?selectedTable=" + tableName;
+            Map<String, String> dataParams = new HashMap<>(allParams);
+            dataParams.remove("tableName");
+            dataParams.remove("targetName");
+
+            // Eliminăm câmpurile necompletate (validăm doar ce se modifică)
+            dataParams.entrySet().removeIf(entry -> entry.getValue() == null || entry.getValue().trim().isEmpty());
+
+            if (dataParams.isEmpty()) {
+                throw new IllegalArgumentException("Nu ați introdus nicio valoare nouă!");
+            }
+
+            for (Map.Entry<String, String> entry : dataParams.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue().trim();
+
+                if (key.equalsIgnoreCase("Telefon")) {
+                    if (!value.matches("^\\d{3}-\\d{3}-\\d{4}$")) throw new IllegalArgumentException("Telefon invalid!");
+                }
+                else if (key.equalsIgnoreCase("Website")) {
+                    if (!value.matches("^https://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}(/.*)?$")) throw new IllegalArgumentException("Website invalid!");
+                }
+                else if (key.equalsIgnoreCase("Greutate")) {
+                    if (!value.matches("^\\d+(\\.\\d+)?$")) throw new IllegalArgumentException("Greutate invalidă!");
+                    if (Double.parseDouble(value) < 0) throw new IllegalArgumentException("Greutatea nu poate fi negativă!");
+                }
+                else if (value.matches("^-?\\d+$")) {
+                    int numValue = Integer.parseInt(value);
+                    if (numValue < 0) throw new IllegalArgumentException("Câmpul '" + key + "' nu poate fi negativ!");
+                }
+                else {
+                    if (key.equalsIgnoreCase("CodFacultate") && value.length() < 2) throw new IllegalArgumentException("CodFacultate: min 2!");
+                    else if (!key.equalsIgnoreCase("CodFacultate") && value.length() < 3) throw new IllegalArgumentException("Câmpul '" + key + "': min 3!");
+                }
+            }
+
+            databaseService.updateRecord(tableName, targetName, dataParams);
+            ra.addFlashAttribute("successMessage", "Actualizare realizată cu succes!");
+
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            ra.addFlashAttribute("errorMessage", "La Update - Conflict de date: Modificarea încalcă o regulă de unicitate.");
         } catch (IllegalArgumentException e) {
-            ra.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/dashboard?selectedTable=" + tableName;
+            ra.addFlashAttribute("errorMessage", "La Update - Eroare validare: " + e.getMessage());
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", "La Update - Eroare neprevăzută: " + e.getMessage());
         }
+
+        return "redirect:/dashboard?selectedTable=" + tableName;
     }
 
-    @PostMapping("/delete")
-    public String deleteData(@RequestParam String tableName, @RequestParam String identifier) {
-        databaseService.deleteByBusinessName(tableName, identifier);
-        return "redirect:/dashboard?selectedTable=" + tableName;
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        session.invalidate();
+        return "redirect:/";
     }
 }
