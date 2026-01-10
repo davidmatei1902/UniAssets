@@ -161,11 +161,11 @@ public class AppController {
 
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
             String detail = (e.getRootCause() != null) ? e.getRootCause().getMessage() : "Conflict de unicitate sau cheie externă.";
-            ra.addFlashAttribute("errorMessage", "La Inserare - Eroare SQL: " + detail);
+            ra.addFlashAttribute("errorMessage", "La Inserare: " + detail);
         } catch (IllegalArgumentException e) {
-            ra.addFlashAttribute("errorMessage", "La Inserare - Eroare validare: " + e.getMessage());
+            ra.addFlashAttribute("errorMessage", "La Inserare: " + e.getMessage());
         } catch (Exception e) {
-            ra.addFlashAttribute("errorMessage", "La Inserare - Eroare neprevăzută: " + e.getMessage());
+            ra.addFlashAttribute("errorMessage", "La Inserare: " + e.getMessage());
         }
 
         return "redirect:/dashboard?selectedTable=" + tableName;
@@ -231,9 +231,9 @@ public class AppController {
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
             ra.addFlashAttribute("errorMessage", "La Update - Conflict de date: Modificarea încalcă o regulă de unicitate.");
         } catch (IllegalArgumentException e) {
-            ra.addFlashAttribute("errorMessage", "La Update - Eroare validare: " + e.getMessage());
+            ra.addFlashAttribute("errorMessage", "La Update: " + e.getMessage());
         } catch (Exception e) {
-            ra.addFlashAttribute("errorMessage", "La Update - Eroare neprevăzută: " + e.getMessage());
+            ra.addFlashAttribute("errorMessage", "La Update: " + e.getMessage());
         }
 
         return "redirect:/dashboard?selectedTable=" + tableName;
