@@ -12,11 +12,9 @@ import java.util.List;
 
 public interface AssetRepository extends JpaRepository<Asset, Long> {
 
-    // SQL Pur pentru filtrare (Cerinta E - Nota 10)
     @Query(value = "SELECT * FROM Dotari WHERE NumeDotare LIKE %:name%", nativeQuery = true)
     List<Asset> searchByNameNative(@Param("name") String name);
 
-    // SQL Pur pentru sortare dupa progres (Cerinta E)
     @Query(value = "SELECT * FROM Dotari ORDER BY Progres DESC", nativeQuery = true)
     List<Asset> findAllSortedByProgressNative();
 }

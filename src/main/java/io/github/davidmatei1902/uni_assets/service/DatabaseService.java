@@ -30,12 +30,9 @@ public class DatabaseService {
             "SalaDotari", "DotariCaracteristici", "SalaDepartament", "Utilizatori"
     );
 
-    // METODA NOUA: Salvare prin JPA pentru a folosi validarile @Min, @Size (Cerinta A.1)
     public void saveWithJPA(Asset asset) {
         assetRepository.save(asset);
     }
-
-    // --- TOATE METODELE TALE ORIGINALE ---
 
     private void validateFormData(Map<String, String> formData) {
         for (Map.Entry<String, String> entry : formData.entrySet()) {
@@ -136,13 +133,12 @@ public class DatabaseService {
 
         String sql = "INSERT INTO " + tableName + " (" + columns + ") VALUES (" + placeholders + ")";
 
-        // 2. Extragem valorile cu suport pentru FLOAT (Greutate) și INT (Etaj/Capacitate)
         Object[] values = params.values().stream().map(val -> {
             try {
                 if (val == null) return null;
-                // Verificăm dacă este număr cu virgulă (ex: 2.5)
+                // verificăm dacă este număr cu virgulă (ex: 2.5)
                 if (val.matches("-?\\d+\\.\\d+")) return Float.parseFloat(val);
-                // Verificăm dacă este număr întreg (ex: 10)
+                // verificăm dacă este număr întreg (ex: 10)
                 if (val.matches("-?\\d+")) return Integer.parseInt(val);
                 return val;
             } catch (Exception e) {
@@ -166,7 +162,6 @@ public class DatabaseService {
 
             sets.add(key + " = ?");
 
-            // Conversie robustă pentru UPDATE (asigură suportul pentru Greutate float)
             try {
                 if (val != null && val.matches("-?\\d+\\.\\d+")) {
                     params.add(Float.parseFloat(val));
@@ -185,7 +180,6 @@ public class DatabaseService {
     }
 
     public void deleteRecord(String tableName, String identifier) {
-        // Identificăm coloana de tip "Nume" pentru tabelul respectiv
         String columnName = getNameColumn(tableName);
 
         String sql = "DELETE FROM " + tableName + " WHERE " + columnName + " = ?";

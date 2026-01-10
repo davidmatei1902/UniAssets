@@ -114,48 +114,40 @@ public class AppController {
             Map<String, String> dataParams = new HashMap<>(allParams);
             dataParams.remove("tableName");
 
-            // 1. Gestionare Constrângeri SQL: Forțăm FacultateID pentru tabelul Departament
             if (tableName.equalsIgnoreCase("Departament")) {
                 dataParams.put("FacultateID", "5");
             }
 
-            // 2. Ierarhie de Validare Robustă (Previne conflictele între tipuri de date)
             for (Map.Entry<String, String> entry : dataParams.entrySet()) {
                 String key = entry.getKey();
                 String value = (entry.getValue() != null) ? entry.getValue().trim() : "";
 
-                // Verificare câmp gol (Cerința A.1)
                 if (value.isEmpty()) {
                     throw new IllegalArgumentException("Câmpul '" + key + "' nu poate fi gol!");
                 }
 
                 if (key.equalsIgnoreCase("Telefon")) {
-                    // Validare Telefon: Format XXX-XXX-XXXX
                     if (!value.matches("^\\d{3}-\\d{3}-\\d{4}$")) {
                         throw new IllegalArgumentException("Telefonul trebuie să fie de forma XXX-XXX-XXXX!");
                     }
                 }
                 else if (key.equalsIgnoreCase("Website")) {
-                    // Validare Website: https://...
                     if (!value.matches("^https://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}(/.*)?$")) {
                         throw new IllegalArgumentException("Website-ul trebuie să înceapă cu https:// și să fie valid!");
                     }
                 }
                 else if (key.equalsIgnoreCase("Greutate")) {
-                    // Validare Greutate: Permite FLOAT (ex: 12.5)
                     if (!value.matches("^\\d+(\\.\\d+)?$")) {
                         throw new IllegalArgumentException("Greutatea trebuie să fie un număr valid!");
                     }
                     if (Double.parseDouble(value) < 0) throw new IllegalArgumentException("Greutatea nu poate fi negativă!");
                 }
                 else if (value.matches("^-?\\d+$")) {
-                    // Validare Numere Întregi (Etaj, Capacitate - doar dacă nu sunt Telefon/Greutate)
                     int numValue = Integer.parseInt(value);
                     if (numValue < 0) throw new IllegalArgumentException("Câmpul '" + key + "' nu poate fi negativ!");
                     if (key.equalsIgnoreCase("Capacitate") && numValue == 0) throw new IllegalArgumentException("Capacitatea minimă este 1!");
                 }
                 else {
-                    // Validare Text General (Regula de minim 3 caractere, excepție CodFacultate)
                     if (key.equalsIgnoreCase("CodFacultate")) {
                         if (value.length() < 2) throw new IllegalArgumentException("CodFacultate: minim 2 caractere!");
                     } else if (!key.equalsIgnoreCase("FacultateID")) { // Ignorăm ID-ul forțat de la validarea de caractere
@@ -182,7 +174,6 @@ public class AppController {
     @PostMapping("/delete")
     public String deleteData(@RequestParam String tableName, @RequestParam String identifier, RedirectAttributes ra) {
         try {
-            // Validare: nu permitem ștergerea fără un identificator (Cerința A.1)
             if (identifier == null || identifier.trim().isEmpty()) {
                 throw new IllegalArgumentException("Trebuie să introduceți un nume/identificator pentru ștergere!");
             }
@@ -192,7 +183,6 @@ public class AppController {
 
             return "redirect:/dashboard?selectedTable=" + tableName;
         } catch (Exception e) {
-            // Prindem erorile de constrângeri SQL (ex: nu poți șterge o facultate care are departamente)
             ra.addFlashAttribute("errorMessage", "Eroare la ștergere: " + e.getMessage());
             return "redirect:/dashboard?selectedTable=" + tableName;
         }
@@ -205,7 +195,6 @@ public class AppController {
             dataParams.remove("tableName");
             dataParams.remove("targetName");
 
-            // Eliminăm câmpurile necompletate (validăm doar ce se modifică)
             dataParams.entrySet().removeIf(entry -> entry.getValue() == null || entry.getValue().trim().isEmpty());
 
             if (dataParams.isEmpty()) {
