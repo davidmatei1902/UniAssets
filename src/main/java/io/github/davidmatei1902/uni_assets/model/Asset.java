@@ -24,13 +24,13 @@ public class Asset {
     @Column(name = "TipDotare")
     private String type;
 
-    @Column(name = "Producator") // Schimbat din Cantitate in Producator
+    @Column(name = "Producator")
     private String manufacturer;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Stare")
     private AssetStatus status;
 
-    @Column(name = "Progres") // Pastram pentru Cerinta A.2 (poti sa-l pui 0 default)
+    @Column(name = "Progres")
     private Integer progress = 0;
 }

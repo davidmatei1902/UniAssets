@@ -150,7 +150,7 @@ public class AppController {
                 else {
                     if (key.equalsIgnoreCase("CodFacultate")) {
                         if (value.length() < 2) throw new IllegalArgumentException("CodFacultate: minim 2 caractere!");
-                    } else if (!key.equalsIgnoreCase("FacultateID")) { // Ignorăm ID-ul forțat de la validarea de caractere
+                    } else if (!key.equalsIgnoreCase("FacultateID")) {
                         if (value.length() < 3) throw new IllegalArgumentException("Câmpul '" + key + "': minim 3 caractere!");
                     }
                 }
